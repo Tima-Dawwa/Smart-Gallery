@@ -2,7 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:smartgallery/core/helpers/service_locator.dart';
-import 'package:smartgallery/features/auth/data/repos/auth_repos_impl.dart';
+import 'package:smartgallery/features/Auth/data/repos/auth_repos_impl.dart';
 
 class ApiService {
   // final String baseUrl = 'http://10.0.2.2:5000';

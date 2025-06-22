@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
-import 'package:smartgallery/features/auth/presentation/views/widgets/app_logo.dart';
-import 'package:smartgallery/features/auth/presentation/views/widgets/auth_form.dart';
-import 'package:smartgallery/features/auth/presentation/views/widgets/auth_header.dart';
-import 'package:smartgallery/features/auth/presentation/views/widgets/auth_toggle.dart';
+import 'package:smartgallery/features/Auth/presentation/views/widgets/app_logo.dart';
+import 'package:smartgallery/features/Auth/presentation/views/widgets/auth_form.dart';
+import 'package:smartgallery/features/Auth/presentation/views/widgets/auth_header.dart';
+import 'package:smartgallery/features/Auth/presentation/views/widgets/auth_toggle.dart';
 
 
 class SignInPage extends StatefulWidget {

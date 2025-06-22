@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:smartgallery/core/helpers/api_service.dart';
 import 'package:smartgallery/core/helpers/failure.dart';
 
-import 'package:smartgallery/features/auth/data/repos/auth_repo.dart';
+import 'package:smartgallery/features/Auth/data/repos/auth_repo.dart';
 
 class AuthRepoImpl extends AuthRepo {
   final ApiService apiService;
