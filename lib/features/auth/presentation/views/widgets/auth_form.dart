@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/core/widgets/custom_text_fiels.dart';
+import 'package:smartgallery/features/My%20Intereset/interset_page.dart';
 
 class AuthForm extends StatefulWidget {
   final bool isSignUp;
@@ -34,6 +36,8 @@ class _AuthFormState extends State<AuthForm> {
       _nameController.clear();
       _ageController.clear();
       _passwordController.clear();
+      // Reset form validation state
+      _formKey.currentState?.reset();
     }
   }
 
@@ -44,6 +48,21 @@ class _AuthFormState extends State<AuthForm> {
         widget.isSignUp ? _ageController.text : null,
         _passwordController.text,
       );
+
+      // Navigate to interests page only if it's sign up
+      if (widget.isSignUp) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const InterestsPage()),
+        );
+      } else {
+        // Handle login navigation - navigate to main app
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const HomePage()),
+        // );
+        print('Login successful - navigate to main app');
+      }
     }
   }
 
@@ -59,6 +78,7 @@ class _AuthFormState extends State<AuthForm> {
           key: _formKey,
           child: Column(
             children: [
+              // Name Field
               CustomTextField(
                 controller: _nameController,
                 labelText: 'Name',
@@ -72,19 +92,26 @@ class _AuthFormState extends State<AuthForm> {
               ),
               const SizedBox(height: 16),
 
+              // Age Field (only for sign up)
               if (widget.isSignUp) ...[
                 CustomTextField(
                   controller: _ageController,
                   labelText: 'Age',
                   prefixIcon: Icons.cake,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(
+                      3,
+                    ), // Limit to 3 digits (max 999)
+                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your age';
                     }
                     int? age = int.tryParse(value);
                     if (age == null || age < 1 || age > 120) {
-                      return 'Please enter a valid age';
+                      return 'Please enter a valid age (1-120)';
                     }
                     return null;
                   },
@@ -92,6 +119,7 @@ class _AuthFormState extends State<AuthForm> {
                 const SizedBox(height: 16),
               ],
 
+              // Password Field
               CustomTextField(
                 controller: _passwordController,
                 labelText: 'Password',
@@ -109,6 +137,7 @@ class _AuthFormState extends State<AuthForm> {
               ),
               const SizedBox(height: 24),
 
+              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
