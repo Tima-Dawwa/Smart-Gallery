@@ -7,7 +7,7 @@ import 'package:smartgallery/features/My%20Intereset/widgets/intereset_header.da
 import 'widgets/continue_button.dart';
 
 class InterestsPage extends StatefulWidget {
-  const InterestsPage({Key? key}) : super(key: key);
+  const InterestsPage({super.key});
 
   @override
   State<InterestsPage> createState() => _InterestsPageState();
@@ -16,7 +16,6 @@ class InterestsPage extends StatefulWidget {
 class _InterestsPageState extends State<InterestsPage> {
   final Set<String> _selectedInterests = {};
 
-  // Predefined interests with icons
   final List<Map<String, dynamic>> _availableInterests = [
     {'name': 'Photography', 'icon': Icons.camera_alt},
     {'name': 'Travel', 'icon': Icons.flight},

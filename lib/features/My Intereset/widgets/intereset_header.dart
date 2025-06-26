@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 
 class InterestsHeader extends StatelessWidget {
-  const InterestsHeader({Key? key}) : super(key: key);
+  const InterestsHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
