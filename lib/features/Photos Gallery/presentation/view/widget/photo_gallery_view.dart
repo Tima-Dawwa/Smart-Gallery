@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:smartgallery/core/helpers/image_cropper_handler.dart';
 import 'package:smartgallery/core/helpers/image_share_handler.dart';
 import 'package:smartgallery/features/Photos%20Gallery/presentation/view/photo_gallery.dart';
@@ -13,7 +14,7 @@ class PhotoGalleryView extends StatefulWidget {
   final bool showCropButton;
   final bool showShareButton;
   final Function(int)? onPhotoDeleted;
-  final Function(String)? onPhotoCropped;
+  final Function(String, int)? onPhotoCropped; // Updated to include index
 
   const PhotoGalleryView({
     super.key,
@@ -36,13 +37,15 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
   late PageController _pageController;
   int _currentIndex = 0;
   bool _showControls = true;
-  bool _isCropping = false; 
+  bool _isCropping = false;
+  late List<String> _photoUrls; // Make it mutable
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    _photoUrls = List<String>.from(widget.photoUrls); // Create mutable copy
   }
 
   @override
@@ -83,8 +86,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
     }
 
     try {
-      if (widget.photoUrls.isEmpty ||
-          _currentIndex >= widget.photoUrls.length) {
+      if (_photoUrls.isEmpty || _currentIndex >= _photoUrls.length) {
         debugPrint('Invalid photo index or empty photo list');
         _showErrorSnackBar('No valid image to crop');
         return;
@@ -94,7 +96,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
         _isCropping = true;
       });
 
-      final String currentImagePath = widget.photoUrls[_currentIndex];
+      final String currentImagePath = _photoUrls[_currentIndex];
       debugPrint('Attempting to crop image: $currentImagePath');
 
       // Show the crop dialog first
@@ -114,9 +116,20 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
             Navigator.of(context).pop();
           }
 
-          if (croppedPath != null && widget.onPhotoCropped != null) {
-            debugPrint('Crop successful, notifying parent: $croppedPath');
-            widget.onPhotoCropped!(croppedPath);
+          if (croppedPath != null) {
+            debugPrint('Crop successful: $croppedPath');
+
+            // Update the local photo URLs list
+            setState(() {
+              _photoUrls[_currentIndex] = croppedPath;
+            });
+
+            // Notify parent with the cropped path and index
+            if (widget.onPhotoCropped != null) {
+              widget.onPhotoCropped!(croppedPath, _currentIndex);
+            }
+
+            _showSuccessSnackBar('Image cropped successfully!');
           } else {
             debugPrint('Crop was cancelled or failed');
           }
@@ -181,8 +194,20 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
     }
   }
 
+  void _showSuccessSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   void _shareImage() {
-    final String currentImagePath = widget.photoUrls[_currentIndex];
+    final String currentImagePath = _photoUrls[_currentIndex];
     ImageShareHandler.shareImageWithOptions(
       context: context,
       imagePath: currentImagePath,
@@ -242,39 +267,53 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       child: PageView.builder(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        itemCount: widget.photoUrls.length,
+        itemCount: _photoUrls.length,
         itemBuilder: (context, index) {
           return InteractiveViewer(
-            child: Center(
-              child: Image.asset(
-                widget.photoUrls[index],
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[800],
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.broken_image,
-                          color: Colors.white54,
-                          size: 64,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Text(
-                            'Failed to load image',
-                            style: TextStyle(color: Colors.white54),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+            child: Center(child: _buildImageWidget(_photoUrls[index])),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(String imagePath) {
+    // Check if it's an asset or a file path
+    if (imagePath.startsWith('assets/')) {
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorWidget();
+        },
+      );
+    } else {
+      // It's a file path (cropped image or other file)
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorWidget();
+        },
+      );
+    }
+  }
+
+  Widget _buildErrorWidget() {
+    return Container(
+      color: Colors.grey[800],
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.broken_image, color: Colors.white54, size: 64),
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Failed to load image',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -302,7 +341,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
               ),
               Text(
-                '${_currentIndex + 1} / ${widget.photoUrls.length}',
+                '${_currentIndex + 1} / ${_photoUrls.length}',
                 style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
               Row(
