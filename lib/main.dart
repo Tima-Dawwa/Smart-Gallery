@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:smartgallery/features/Auth/presentation/views/SignIn/signIn.dart';
 import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/main_gallery.dart';
@@ -11,10 +12,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AudioPlayer _audioPlayer = AudioPlayer();
+
+  void _playAudio() async {
+    await _audioPlayer.play(AssetSource('test.mp3')); // note: no `assets/` prefix here
+  }
     return MaterialApp(
-      title: 'Smart Gallery',
+      title: 'Pixort',
       debugShowCheckedModeBanner: false,
-      home: MainGalleryPage(),
+      home:MainGalleryPage(),
     );
   }
 }
+
+
+
+
+// Scaffold(
+//       appBar: AppBar(title: Text('MP3 Audio Player')),
+//       body: Center(
+//         child: ElevatedButton(
+//           onPressed: _playAudio,
+//           child: Text('Play MP3'),
+//         ),
+//       ),
+//     )

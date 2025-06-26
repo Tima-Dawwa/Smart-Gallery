@@ -32,11 +32,9 @@ class _AuthFormState extends State<AuthForm> {
   void didUpdateWidget(AuthForm oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.isSignUp != widget.isSignUp) {
-      // Clear form when switching between sign up and login
       _nameController.clear();
       _ageController.clear();
       _passwordController.clear();
-      // Reset form validation state
       _formKey.currentState?.reset();
     }
   }
@@ -48,8 +46,6 @@ class _AuthFormState extends State<AuthForm> {
         widget.isSignUp ? _ageController.text : null,
         _passwordController.text,
       );
-
-      // Navigate to interests page only if it's sign up
       if (widget.isSignUp) {
         Navigator.pushReplacement(
           context,

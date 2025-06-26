@@ -5,8 +5,7 @@ class FolderCard extends StatelessWidget {
   final Map<String, dynamic> folder;
   final VoidCallback onTap;
 
-  const FolderCard({Key? key, required this.folder, required this.onTap})
-    : super(key: key);
+  const FolderCard({super.key, required this.folder, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

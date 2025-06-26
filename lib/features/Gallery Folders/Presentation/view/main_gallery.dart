@@ -5,6 +5,8 @@ import 'package:smartgallery/features/Display%20Interset/display_interset.dart';
 import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/folder_card.dart';
 import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/folder_grid.dart';
 import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/gallery_header.dart';
+import 'package:smartgallery/features/Photos%20Gallery/presentation/view/photo_gallery.dart';
+import 'package:smartgallery/features/Photos%20Gallery/presentation/view/widget/photo_grid.dart';
 
 
 class MainGalleryPage extends StatefulWidget {
@@ -15,7 +17,6 @@ class MainGalleryPage extends StatefulWidget {
 }
 
 class _MainGalleryPageState extends State<MainGalleryPage> {
-  // Sample folder data - in real app this would come from database/API
   final List<Map<String, dynamic>> _folders = [
     {
       'id': '1',
@@ -87,9 +88,24 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
   }
 
   void _navigateToFolderPhotos(Map<String, dynamic> folder) {
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => FolderPhotosPage(folder: folder)),
+    // );
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => FolderPhotosPage(folder: folder)),
+      MaterialPageRoute(
+        builder:
+            (context) => PhotoGrid(
+              photoUrls: [
+                'assets/family.jpeg',
+                'assets/family.jpeg',
+                'assets/family.jpeg',
+              ],
+              folderName: 'My Photos',
+            ),
+      ),
     );
   }
 
@@ -132,7 +148,6 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
         padding: const EdgeInsets.only(top: 18),
         child: CustomScrollView(
           slivers: [
-            // Header section as sliver
             SliverToBoxAdapter(
               child: GalleryHeader(
                 foldersCount: _folders.length,
@@ -140,7 +155,6 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
               ),
             ),
 
-            // Folders Grid as sliver
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverGrid(
@@ -160,7 +174,6 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
               ),
             ),
 
-            // Add some bottom padding
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
           ],
         ),
