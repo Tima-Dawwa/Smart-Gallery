@@ -52,113 +52,113 @@ class _AuthFormState extends State<AuthForm> {
           MaterialPageRoute(builder: (context) => const InterestsPage()),
         );
       } else {
-        // Handle login navigation - navigate to main app
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const HomePage()),
-        // );
-        print('Login successful - navigate to main app');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const InterestsPage()),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 8,
-      shadowColor: Themes.primary.withOpacity(0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Name Field
-              CustomTextField(
-                controller: _nameController,
-                labelText: 'Name',
-                prefixIcon: Icons.person,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Age Field (only for sign up)
-              if (widget.isSignUp) ...[
-                CustomTextField(
-                  controller: _ageController,
-                  labelText: 'Age',
-                  prefixIcon: Icons.cake,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(
-                      3,
-                    ), // Limit to 3 digits (max 999)
-                  ],
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your age';
-                    }
-                    int? age = int.tryParse(value);
-                    if (age == null || age < 1 || age > 120) {
-                      return 'Please enter a valid age (1-120)';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Password Field
-              CustomTextField(
-                controller: _passwordController,
-                labelText: 'Password',
-                prefixIcon: Icons.lock,
-                isPassword: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Themes.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
-                  ),
-                  child: Text(
-                    widget.isSignUp ? 'Sign Up' : 'Sign In',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          CustomTextField(
+            controller: _nameController,
+            labelText: 'Name',
+            prefixIcon: Icons.person,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your name';
+              }
+              return null;
+            },
           ),
-        ),
+          const SizedBox(height: 16),
+
+          // Age Field (only for sign up)
+          if (widget.isSignUp) ...[
+            CustomTextField(
+              controller: _ageController,
+              labelText: 'Age',
+              prefixIcon: Icons.cake,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(
+                  3,
+                ), // Limit to 3 digits (max 999)
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your age';
+                }
+                int? age = int.tryParse(value);
+                if (age == null || age < 1 || age > 120) {
+                  return 'Please enter a valid age (1-120)';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Password Field
+          CustomTextField(
+            controller: _passwordController,
+            labelText: 'Password',
+            prefixIcon: Icons.lock,
+            isPassword: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your password';
+              }
+              if (value.length < 6) {
+                return 'Password must be at least 6 characters';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Submit Button with Gradient
+          Container(
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: Themes.customGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Themes.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: _submitForm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                widget.isSignUp ? 'Sign Up' : 'Sign In',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

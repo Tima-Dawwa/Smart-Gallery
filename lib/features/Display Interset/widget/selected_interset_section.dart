@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/features/Display%20Interset/widget/interset_chip_selected.dart';
 
 class SelectedInterestsSection extends StatelessWidget {
@@ -19,15 +18,15 @@ class SelectedInterestsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Selected Interests',
           style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Themes.primary,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 12,
           runSpacing: 12,
