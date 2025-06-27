@@ -51,7 +51,6 @@ class _InterestsPageState extends State<InterestsPage> {
 
   void _continueToApp() {
     if (_selectedInterests.isNotEmpty) {
-      print('Selected interests: $_selectedInterests');
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -67,88 +66,105 @@ class _InterestsPageState extends State<InterestsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Themes.secondary,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const InterestsHeader(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: Themes.customGradient, // Using your custom gradient
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const InterestsHeader(),
 
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      child: Row(
-                        children: [
-                          Text(
-                            '${_selectedInterests.length} selected',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                            width: 1,
                           ),
-                          const Spacer(),
-                          if (_selectedInterests.length >= 3)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.green,
-                                  width: 1,
-                                ),
-                              ),
-                              child: const Text(
-                                'Great choice!',
-                                style: TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              '${_selectedInterests.length} selected',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                        ],
+                            const Spacer(),
+                            if (_selectedInterests.length >= 3)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Great choice!',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children:
-                          _availableInterests.map((interest) {
-                            final isSelected = _selectedInterests.contains(
-                              interest['name'],
-                            );
-                            return InterestChip(
-                              name: interest['name'],
-                              icon: interest['icon'],
-                              isSelected: isSelected,
-                              onTap: () => _toggleInterest(interest['name']),
-                            );
-                          }).toList(),
-                    ),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children:
+                            _availableInterests.map((interest) {
+                              final isSelected = _selectedInterests.contains(
+                                interest['name'],
+                              );
+                              return InterestChip(
+                                name: interest['name'],
+                                icon: interest['icon'],
+                                isSelected: isSelected,
+                                onTap: () => _toggleInterest(interest['name']),
+                              );
+                            }).toList(),
+                      ),
 
-                    const SizedBox(height: 40),
-                  ],
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            Container(
-              padding: const EdgeInsets.all(20.0),
-              child: ContinueButton(
-                isEnabled: _selectedInterests.isNotEmpty,
-                selectedCount: _selectedInterests.length,
-                onPressed: _continueToApp,
+              Container(
+                padding: const EdgeInsets.all(20.0),
+                child: ContinueButton(
+                  isEnabled: _selectedInterests.isNotEmpty,
+                  selectedCount: _selectedInterests.length,
+                  onPressed: _continueToApp,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

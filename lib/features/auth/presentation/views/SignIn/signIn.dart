@@ -5,7 +5,6 @@ import 'package:smartgallery/features/Auth/presentation/views/SignIn/widgets/aut
 import 'package:smartgallery/features/Auth/presentation/views/SignIn/widgets/auth_header.dart';
 import 'package:smartgallery/features/Auth/presentation/views/SignIn/widgets/auth_toggle.dart';
 
-
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
@@ -14,7 +13,7 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  bool _isSignIn = true; 
+  bool _isSignIn = true;
 
   void _toggleMode() {
     setState(() {
@@ -33,22 +32,38 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Themes.secondary,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const AppLogo(),
-                const SizedBox(height: 32),
-                AuthHeader(isSignUp: _isSignIn),
-                const SizedBox(height: 32),
-                AuthForm(isSignUp: _isSignIn, onSubmit: _handleSubmit),
-                const SizedBox(height: 24),
-                AuthToggle(isSignUp: _isSignIn, onToggle: _toggleMode),
-              ],
+      body: Container(
+        decoration: BoxDecoration(gradient: Themes.customGradient),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Container(
+                padding: const EdgeInsets.all(32.0),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AppLogo(),
+                    const SizedBox(height: 32),
+                    AuthHeader(isSignUp: _isSignIn),
+                    const SizedBox(height: 32),
+                    AuthForm(isSignUp: _isSignIn, onSubmit: _handleSubmit),
+                    const SizedBox(height: 24),
+                    AuthToggle(isSignUp: _isSignIn, onToggle: _toggleMode),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

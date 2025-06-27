@@ -18,10 +18,12 @@ class AuthToggle extends StatelessWidget {
         ),
         GestureDetector(
           onTap: onToggle,
+          
           child: Text(
             isSignUp ? 'Sign In' : 'Sign Up',
             style: TextStyle(
               color: Themes.third,
+            
               fontWeight: FontWeight.bold,
               decoration: TextDecoration.underline,
             ),

@@ -102,9 +102,10 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
 
     if (availableInterests.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('All interests have been added!'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: const Text('All interests have been added!'),
+          backgroundColor: Themes.primary,
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -137,56 +138,87 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Themes.secondary,
-      appBar: InterestsAppBar(),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+      body: Container(
+        decoration: BoxDecoration(gradient: Themes.customGradient),
+        child: SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              InterestsHeader(selectedCount: _selectedInterests.length),
-
-              const SizedBox(height: 24),
-
-              if (_selectedInterests.isNotEmpty) ...[
-                SelectedInterestsSection(
-                  selectedInterests: _selectedInterests,
-                  onRemoveInterest: _removeInterest,
-                  getIconForInterest: _getIconForInterest,
+              // Custom App Bar
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'My Interests',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 40), // Balance the back button
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
-              AddInterestButton(onTap: _showAddInterestDropdown),
-              const Spacer(),
-              SaveButton(onSave: _handleSave),
+              ),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      InterestsHeader(selectedCount: _selectedInterests.length),
+
+                      const SizedBox(height: 24),
+
+                      if (_selectedInterests.isNotEmpty) ...[
+                        SelectedInterestsSection(
+                          selectedInterests: _selectedInterests,
+                          onRemoveInterest: _removeInterest,
+                          getIconForInterest: _getIconForInterest,
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                      AddInterestButton(onTap: _showAddInterestDropdown),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Save Button at bottom
+              Container(
+                padding: const EdgeInsets.all(20.0),
+                child: SaveButton(onSave: _handleSave),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-}
-
-class InterestsAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const InterestsAppBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'My Interests',
-          style: TextStyle(color: Themes.primary, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
