@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
-import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/photo_grid_item.dart';
+import 'package:smartgallery/features/Gallery%20Folders/view/widgets/photo_grid_item.dart';
 
 class FolderPhotosPage extends StatelessWidget {
   final Map<String, dynamic> folder;
@@ -25,9 +25,9 @@ class FolderPhotosPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Themes.secondary,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Themes.customWhite,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Themes.customBlack.withOpacity(0.1),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Themes.primary),
           onPressed: () => Navigator.pop(context),
@@ -46,7 +46,10 @@ class FolderPhotosPage extends StatelessWidget {
             ),
             Text(
               '${folder['photoCount']} photos',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              style: TextStyle(
+                color: Themes.dark.withOpacity(0.6),
+                fontSize: 12,
+              ),
             ),
           ],
         ),

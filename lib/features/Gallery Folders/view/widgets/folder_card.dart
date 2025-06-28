@@ -13,11 +13,11 @@ class FolderCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Themes.customWhite,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Themes.customBlack.withOpacity(0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -26,7 +26,6 @@ class FolderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Folder image
             Expanded(
               flex: 3,
               child: Container(
@@ -42,24 +41,22 @@ class FolderCard extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                    // Lock overlay if folder is locked
                     if (folder['isLocked'])
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Themes.customBlack.withOpacity(0.6),
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(16),
                           ),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Icon(
                             Icons.lock,
-                            color: Colors.white,
+                            color: Themes.customWhite,
                             size: 32,
                           ),
                         ),
                       ),
-                    // Photo count badge
                     Positioned(
                       top: 8,
                       right: 8,
@@ -69,13 +66,13 @@ class FolderCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
+                          color: Themes.customBlack.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${folder['photoCount']}',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Themes.customWhite,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -86,7 +83,6 @@ class FolderCard extends StatelessWidget {
                 ),
               ),
             ),
-            // Folder info
             Expanded(
               flex: 1,
               child: Padding(
@@ -98,7 +94,7 @@ class FolderCard extends StatelessWidget {
                     Row(
                       children: [
                         if (folder['isLocked'])
-                          Icon(Icons.lock, size: 16, color: Colors.grey[600]),
+                          Icon(Icons.lock, size: 16, color: Themes.accent),
                         if (folder['isLocked']) const SizedBox(width: 4),
                         Expanded(
                           child: Text(

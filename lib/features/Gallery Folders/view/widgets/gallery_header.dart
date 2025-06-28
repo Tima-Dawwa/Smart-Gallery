@@ -21,10 +21,10 @@ class GalleryHeader extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: Themes.primary.withOpacity(0.1),
+              gradient: Themes.primaryGradient,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.folder, color: Themes.primary, size: 24),
+            child: Icon(Icons.folder, color: Themes.customWhite, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -41,23 +41,37 @@ class GalleryHeader extends StatelessWidget {
                 ),
                 Text(
                   '$foldersCount folders available',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Themes.dark.withOpacity(0.6),
+                  ),
                 ),
               ],
             ),
           ),
-          // Update Interests Button
-          ElevatedButton.icon(
-            onPressed: onUpdateInterests,
-            icon: const Icon(Icons.favorite, size: 18),
-            label: const Text('Interests'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Themes.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          Container(
+            decoration: BoxDecoration(
+              gradient: Themes.accentGradient,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ElevatedButton.icon(
+              onPressed: onUpdateInterests,
+              icon: Icon(Icons.favorite, size: 18, color: Themes.customWhite),
+              label: Text(
+                'Interests',
+                style: TextStyle(color: Themes.customWhite),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
             ),
           ),
         ],

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
-import 'package:smartgallery/features/Display%20Interset/widget/add_interset.dart';
-import 'package:smartgallery/features/Display%20Interset/widget/add_interset_buttom.dart';
-import 'package:smartgallery/features/Display%20Interset/widget/interset_header.dart';
-import 'package:smartgallery/features/Display%20Interset/widget/save_buttom.dart';
-import 'package:smartgallery/features/Display%20Interset/widget/selected_interset_section.dart';
+import 'package:smartgallery/features/Display%20Interset/view/widget/add_interset.dart';
+import 'package:smartgallery/features/Display%20Interset/view/widget/add_interset_buttom.dart';
+import 'package:smartgallery/features/Display%20Interset/view/widget/interset_header.dart';
+import 'package:smartgallery/features/Display%20Interset/view/widget/save_buttom.dart';
+import 'package:smartgallery/features/Display%20Interset/view/widget/selected_interset_section.dart';
+
+import 'package:smartgallery/features/Gallery%20Folders/view/main_gallery_page.dart';
 
 class SelectedInterestsPage extends StatelessWidget {
   final Set<String> initialSelectedInterests;
@@ -133,6 +135,10 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
   void _handleSave() {
     widget.onSave?.call();
     Navigator.pop(context, _selectedInterests);
+     Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) =>  MainGalleryPage(),),
+    );
   }
 
   @override
@@ -143,7 +149,6 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
         child: SafeArea(
           child: Column(
             children: [
-              // Custom App Bar
               Padding(
                 padding: const EdgeInsets.all(32),
                 child: Row(
@@ -179,12 +184,11 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 40), // Balance the back button
+                    const SizedBox(width: 40),
                   ],
                 ),
               ),
 
-              // Content
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20.0),
@@ -210,7 +214,6 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
                 ),
               ),
 
-              // Save Button at bottom
               Container(
                 padding: const EdgeInsets.all(20.0),
                 child: SaveButton(onSave: _handleSave),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smartgallery/features/Display%20Interset/widget/interset_chip_selected.dart';
+import 'package:smartgallery/features/Display%20Interset/view/widget/interset_chip_selected.dart';
 
 class SelectedInterestsSection extends StatelessWidget {
   final Set<String> selectedInterests;

@@ -11,7 +11,6 @@ class InterestsHeader extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
         child: Column(
           children: [
-            // Icon with glassmorphism effect
             Container(
               width: 80,
               height: 80,
@@ -46,7 +45,6 @@ class InterestsHeader extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Subtitle
             Text(
               'Choose your interests to personalize your experience',
               style: TextStyle(
@@ -58,7 +56,6 @@ class InterestsHeader extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Suggestion text
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(

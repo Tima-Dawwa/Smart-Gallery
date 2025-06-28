@@ -14,7 +14,6 @@ class ImageCropHandler {
     try {
       debugPrint('Starting crop for image: $imagePath');
 
-      // Check if it's an asset or file path
       final bool isAsset = imagePath.startsWith('assets/');
       String sourcePathForCropping;
 
@@ -53,12 +52,11 @@ class ImageCropHandler {
 
       debugPrint('Launching image cropper with path: $sourcePathForCropping');
 
-      // Use a more conservative configuration that's less likely to crash
       final CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: sourcePathForCropping,
         compressFormat: ImageCompressFormat.jpg,
         compressQuality: 85,
-        maxWidth: 2048, // Add max dimensions to prevent memory issues
+        maxWidth: 2048,
         maxHeight: 2048,
         uiSettings: [
           AndroidUiSettings(
@@ -75,7 +73,6 @@ class ImageCropHandler {
             dimmedLayerColor: Colors.black54,
             hideBottomControls: false,
             showCropGrid: true,
-            // Simplified aspect ratio presets to avoid issues
             aspectRatioPresets: [
               CropAspectRatioPreset.original,
               CropAspectRatioPreset.square,
@@ -102,7 +99,6 @@ class ImageCropHandler {
 
       debugPrint('Image cropper completed: ${croppedFile?.path}');
 
-      // Clean up temporary file if we created one for an asset
       if (isAsset && sourcePathForCropping.isNotEmpty) {
         try {
           await File(sourcePathForCropping).delete();
@@ -156,12 +152,10 @@ class ImageCropHandler {
     }
   }
 
-  /// Copy asset to temporary file for cropping with better error handling
   static Future<String> _copyAssetToTempFile(String assetPath) async {
     try {
       debugPrint('Copying asset to temp file: $assetPath');
 
-      // Load asset as bytes
       final ByteData data = await rootBundle.load(assetPath);
       final Uint8List bytes = data.buffer.asUint8List();
 
@@ -172,10 +166,8 @@ class ImageCropHandler {
         return '';
       }
 
-      // Get temporary directory
       final Directory tempDir = await getTemporaryDirectory();
 
-      // Ensure temp directory exists
       if (!await tempDir.exists()) {
         await tempDir.create(recursive: true);
       }
@@ -183,7 +175,6 @@ class ImageCropHandler {
       final String fileName = assetPath.split('/').last;
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-      // Ensure proper file extension
       String finalFileName = fileName;
       if (!fileName.toLowerCase().endsWith('.jpg') &&
           !fileName.toLowerCase().endsWith('.jpeg') &&
@@ -197,10 +188,8 @@ class ImageCropHandler {
 
       debugPrint('Writing to temp file: ${tempFile.path}');
 
-      // Write bytes to temporary file
       await tempFile.writeAsBytes(bytes, flush: true);
 
-      // Verify file was created and has content
       if (await tempFile.exists()) {
         final int fileSize = await tempFile.length();
         debugPrint('Temp file created successfully, size: $fileSize bytes');
@@ -222,7 +211,6 @@ class ImageCropHandler {
     }
   }
 
-  /// Save cropped image to permanent app directory
   static Future<String> _saveCroppedImage(
     String croppedPath,
     bool wasAsset,
@@ -234,18 +222,15 @@ class ImageCropHandler {
           await getApplicationDocumentsDirectory();
       final String croppedDirPath = '${appDocumentsDir.path}/cropped_images';
 
-      // Create directory if it doesn't exist
       final Directory croppedDir = Directory(croppedDirPath);
       if (!await croppedDir.exists()) {
         await croppedDir.create(recursive: true);
         debugPrint('Created cropped images directory');
       }
 
-      // Generate unique filename
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
       final String extension = croppedPath.split('.').last.toLowerCase();
 
-      // Ensure extension is valid
       final String validExtension =
           ['jpg', 'jpeg', 'png'].contains(extension) ? extension : 'jpg';
 
@@ -258,20 +243,17 @@ class ImageCropHandler {
 
       debugPrint('Saving to permanent path: $permanentPath');
 
-      // Copy cropped file to permanent location
       final File croppedFile = File(croppedPath);
       if (await croppedFile.exists()) {
         await croppedFile.copy(permanentPath);
         debugPrint('File copied successfully');
 
-        // Verify the copied file
         final File savedFile = File(permanentPath);
         if (await savedFile.exists()) {
           final int fileSize = await savedFile.length();
           debugPrint('Saved file verified, size: $fileSize bytes');
         }
 
-        // Clean up the temporary cropped file
         try {
           await croppedFile.delete();
           debugPrint('Temporary cropped file deleted');
@@ -338,7 +320,6 @@ class ImageCropHandler {
     );
   }
 
-  /// Get all cropped images from the app directory
   static Future<List<String>> getCroppedImages() async {
     try {
       final Directory appDocumentsDir =
@@ -358,7 +339,6 @@ class ImageCropHandler {
               .where((path) => _isImageFile(path))
               .toList();
 
-      // Sort by creation time (newest first)
       imagePaths.sort((a, b) {
         try {
           final File fileA = File(a);
@@ -377,13 +357,11 @@ class ImageCropHandler {
     }
   }
 
-  /// Check if file is an image based on extension
   static bool _isImageFile(String path) {
     final String extension = path.toLowerCase().split('.').last;
     return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(extension);
   }
 
-  /// Delete a cropped image
   static Future<bool> deleteCroppedImage(String imagePath) async {
     try {
       final File file = File(imagePath);
@@ -398,7 +376,6 @@ class ImageCropHandler {
     }
   }
 
-  /// Clear all cropped images
   static Future<bool> clearAllCroppedImages() async {
     try {
       final Directory appDocumentsDir =

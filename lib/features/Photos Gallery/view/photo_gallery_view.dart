@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:smartgallery/core/helpers/image_cropper_handler.dart';
 import 'package:smartgallery/core/helpers/image_share_handler.dart';
-import 'package:smartgallery/features/Photos%20Gallery/presentation/view/photo_gallery.dart';
-import 'package:smartgallery/features/Photos%20Gallery/presentation/view/widget/recording_bottom_sheet.dart';
+import 'package:smartgallery/core/utils/themes.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view/widget/recording_bottom_sheet.dart';
 
 class PhotoGalleryView extends StatefulWidget {
   final List<String> photoUrls;
@@ -14,7 +14,7 @@ class PhotoGalleryView extends StatefulWidget {
   final bool showCropButton;
   final bool showShareButton;
   final Function(int)? onPhotoDeleted;
-  final Function(String, int)? onPhotoCropped; // Updated to include index
+  final Function(String, int)? onPhotoCropped; 
 
   const PhotoGalleryView({
     super.key,
@@ -38,14 +38,14 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
   int _currentIndex = 0;
   bool _showControls = true;
   bool _isCropping = false;
-  late List<String> _photoUrls; // Make it mutable
+  late List<String> _photoUrls; 
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
-    _photoUrls = List<String>.from(widget.photoUrls); // Create mutable copy
+    _photoUrls = List<String>.from(widget.photoUrls); 
   }
 
   @override
@@ -56,7 +56,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
 
   void _toggleControls() {
     if (!_isCropping) {
-      // Don't toggle controls while cropping
       setState(() {
         _showControls = !_showControls;
       });
@@ -99,9 +98,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       final String currentImagePath = _photoUrls[_currentIndex];
       debugPrint('Attempting to crop image: $currentImagePath');
 
-      // Show the crop dialog first
       ImageCropHandler.showCropDialog(context, () async {
-        // Show loading dialog
         _showLoadingDialog();
 
         try {
@@ -111,7 +108,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
             title: 'Crop ${widget.folderName} Photo',
           );
 
-          // Hide loading dialog
           if (mounted) {
             Navigator.of(context).pop();
           }
@@ -119,12 +115,10 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
           if (croppedPath != null) {
             debugPrint('Crop successful: $croppedPath');
 
-            // Update the local photo URLs list
             setState(() {
               _photoUrls[_currentIndex] = croppedPath;
             });
 
-            // Notify parent with the cropped path and index
             if (widget.onPhotoCropped != null) {
               widget.onPhotoCropped!(croppedPath, _currentIndex);
             }
@@ -136,7 +130,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
         } catch (e) {
           debugPrint('Error during cropping: $e');
 
-          // Hide loading dialog if still showing
           if (mounted) {
             Navigator.of(context).pop();
             _showErrorSnackBar('Failed to crop image: ${e.toString()}');
@@ -161,18 +154,21 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const AlertDialog(
-          backgroundColor: Color(0xFF1E1E1E),
+        return AlertDialog(
+          backgroundColor: Themes.dark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           content: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(color: Colors.blue),
-                SizedBox(width: 20),
+                CircularProgressIndicator(color: Themes.third),
+                const SizedBox(width: 20),
                 Text(
                   'Cropping image...',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: Themes.customWhite),
                 ),
               ],
             ),
@@ -187,8 +183,12 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.red,
+          backgroundColor: Themes.error,
           duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -199,8 +199,12 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.green,
+          backgroundColor: Themes.success,
           duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -230,7 +234,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Themes.customBlack,
       body: Stack(
         children: [
           _buildPhotoPageView(),
@@ -244,18 +248,25 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
 
   Widget _buildCroppingOverlay() {
     return Container(
-      color: Colors.black54,
-      child: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: Colors.blue),
-            SizedBox(height: 16),
-            Text(
-              'Preparing image for cropping...',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ],
+      color: Themes.customBlack.withOpacity(0.8),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: Themes.primaryGradient,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Themes.customWhite),
+              const SizedBox(height: 16),
+              Text(
+                'Preparing image for cropping...',
+                style: TextStyle(color: Themes.customWhite, fontSize: 16),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -278,7 +289,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
   }
 
   Widget _buildImageWidget(String imagePath) {
-    // Check if it's an asset or a file path
     if (imagePath.startsWith('assets/')) {
       return Image.asset(
         imagePath,
@@ -288,7 +298,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
         },
       );
     } else {
-      // It's a file path (cropped image or other file)
       return Image.file(
         File(imagePath),
         fit: BoxFit.contain,
@@ -301,16 +310,20 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
 
   Widget _buildErrorWidget() {
     return Container(
-      color: Colors.grey[800],
-      child: const Column(
+      color: Themes.dark,
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.broken_image, color: Colors.white54, size: 64),
+          Icon(
+            Icons.broken_image,
+            color: Themes.customWhite.withOpacity(0.5),
+            size: 64,
+          ),
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Text(
               'Failed to load image',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: Themes.customWhite.withOpacity(0.5)),
             ),
           ),
         ],
@@ -329,34 +342,73 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+            colors: [Themes.customBlack.withOpacity(0.8), Colors.transparent],
           ),
         ),
         child: SafeArea(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                onPressed: _navigateBack,
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+              Container(
+                decoration: BoxDecoration(
+                  color: Themes.primary.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: IconButton(
+                  onPressed: _navigateBack,
+                  icon: Icon(Icons.arrow_back, color: Themes.customWhite),
+                ),
               ),
-              Text(
-                '${_currentIndex + 1} / ${_photoUrls.length}',
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  gradient: Themes.customGradient,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_currentIndex + 1} / ${_photoUrls.length}',
+                  style: TextStyle(
+                    color: Themes.customWhite,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               Row(
                 children: [
                   if (widget.showShareButton)
-                    IconButton(
-                      onPressed: _shareImage,
-                      icon: const Icon(Icons.share, color: Colors.white),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Themes.third.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        onPressed: _shareImage,
+                        icon: Icon(Icons.share, color: Themes.customWhite),
+                      ),
                     ),
                   if (widget.showCropButton)
-                    IconButton(
-                      onPressed: _isCropping ? null : _cropImage,
-                      icon: Icon(
-                        Icons.crop,
-                        color: _isCropping ? Colors.grey : Colors.white,
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      decoration: BoxDecoration(
+                        color:
+                            _isCropping
+                                ? Themes.customWhite.withOpacity(0.1)
+                                : Themes.accent.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        onPressed: _isCropping ? null : _cropImage,
+                        icon: Icon(
+                          Icons.crop,
+                          color:
+                              _isCropping
+                                  ? Themes.customWhite.withOpacity(0.3)
+                                  : Themes.customWhite,
+                        ),
                       ),
                     ),
                 ],
@@ -379,7 +431,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
           gradient: LinearGradient(
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
-            colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+            colors: [Themes.customBlack.withOpacity(0.8), Colors.transparent],
           ),
         ),
         child: SafeArea(
@@ -387,9 +439,15 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               if (widget.showDeleteButton)
-                IconButton(
-                  onPressed: _deletePhoto,
-                  icon: const Icon(Icons.delete, color: Colors.white, size: 28),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Themes.error.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: IconButton(
+                    onPressed: _deletePhoto,
+                    icon: Icon(Icons.delete, color: Themes.error, size: 28),
+                  ),
                 ),
               if (widget.showRecordingButton)
                 GestureDetector(
@@ -397,10 +455,17 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.8),
+                      gradient: Themes.accentGradient,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Themes.accent.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.mic, color: Colors.white, size: 28),
+                    child: Icon(Icons.mic, color: Themes.customWhite, size: 28),
                   ),
                 ),
             ],

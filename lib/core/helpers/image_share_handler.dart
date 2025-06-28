@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'dart:typed_data';
 
 class ImageShareHandler {
   static Future<void> shareImage({
@@ -40,19 +39,15 @@ class ImageShareHandler {
     String? subject,
   ) async {
     try {
-      // Load asset as bytes
       final ByteData data = await rootBundle.load(assetPath);
       final Uint8List bytes = data.buffer.asUint8List();
 
-      // Get temporary directory
       final Directory tempDir = await getTemporaryDirectory();
       final String fileName = assetPath.split('/').last;
       final File tempFile = File('${tempDir.path}/$fileName');
 
-      // Write bytes to temporary file
       await tempFile.writeAsBytes(bytes);
 
-      // Share the temporary file
       await Share.shareXFiles(
         [XFile(tempFile.path)],
         text: text ?? 'Check out this image!',
