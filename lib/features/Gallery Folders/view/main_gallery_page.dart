@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/core/widgets/password_dialog.dart';
-import 'package:smartgallery/features/Display%20Interset/display_interset.dart';
-import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/folder_card.dart';
-import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/folder_grid.dart';
-import 'package:smartgallery/features/Gallery%20Folders/Presentation/view/gallery_header.dart';
-import 'package:smartgallery/features/Photos%20Gallery/presentation/view/photo_gallery.dart';
-import 'package:smartgallery/features/Photos%20Gallery/presentation/view/widget/photo_grid.dart';
-
+import 'package:smartgallery/features/Display%20Interset/view/display_interset.dart';
+import 'package:smartgallery/features/Gallery%20Folders/view/widgets/folder_card.dart';
+import 'package:smartgallery/features/Gallery%20Folders/view/widgets/gallery_header.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_grid.dart';
 
 class MainGalleryPage extends StatefulWidget {
   const MainGalleryPage({super.key});
@@ -88,10 +85,7 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
   }
 
   void _navigateToFolderPhotos(Map<String, dynamic> folder) {
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => FolderPhotosPage(folder: folder)),
-    // );
+  
 
     Navigator.push(
       context,
@@ -134,7 +128,7 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
         title: Padding(
           padding: const EdgeInsets.only(top: 48),
           child: Text(
-            'Smart Gallery',
+            'Pixort',
             style: TextStyle(
               color: Themes.primary,
               fontWeight: FontWeight.bold,

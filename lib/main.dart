@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smartgallery/features/Auth/presentation/views/SignIn/signIn.dart';
-
+import 'package:smartgallery/features/Auth/view/signIn.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,13 +10,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   
     return MaterialApp(
       title: 'Pixort',
       debugShowCheckedModeBanner: false,
-      home:SignInPage(),
+      home: SignInPage(),
     );
   }
 }
-
-

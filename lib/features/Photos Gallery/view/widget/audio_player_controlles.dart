@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:smartgallery/core/utils/themes.dart';
 
 class AudioPlayerControls extends StatelessWidget {
   final String recordingPath;
@@ -28,8 +29,15 @@ class AudioPlayerControls extends StatelessWidget {
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.grey[800],
+            gradient: Themes.customGradient,
             borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Themes.darkPurple.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -37,7 +45,7 @@ class AudioPlayerControls extends StatelessWidget {
               const SizedBox(height: 12),
               _buildDebugInfo(),
               const SizedBox(height: 12),
-              _buildProgressSlider(),
+              _buildProgressSlider(context),
               const SizedBox(height: 16),
               _buildControlButtons(context),
             ],
@@ -52,7 +60,11 @@ class AudioPlayerControls extends StatelessWidget {
       recordingPath.startsWith('assets/')
           ? 'Test Recording'
           : 'Saved Recording',
-      style: const TextStyle(color: Colors.white, fontSize: 16),
+      style: TextStyle(
+        color: Themes.customWhite,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 
@@ -61,48 +73,69 @@ class AudioPlayerControls extends StatelessWidget {
       children: [
         Text(
           'File: ${recordingPath.split('/').last}',
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
+          style: TextStyle(
+            color: Themes.customWhite.withOpacity(0.7),
+            fontSize: 12,
+          ),
         ),
         Text(
           'Duration: ${_formatDuration(playbackDuration)}',
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
+          style: TextStyle(
+            color: Themes.customWhite.withOpacity(0.7),
+            fontSize: 12,
+          ),
         ),
         Text(
           'Position: ${_formatDuration(playbackPosition)}',
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
+          style: TextStyle(
+            color: Themes.customWhite.withOpacity(0.7),
+            fontSize: 12,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildProgressSlider() {
+  Widget _buildProgressSlider(BuildContext context) {
     if (playbackDuration.inMilliseconds <= 0) {
       return const SizedBox.shrink();
     }
 
     return Column(
       children: [
-        Slider(
-          value:
-              playbackDuration.inMilliseconds > 0
-                  ? (playbackPosition.inMilliseconds /
-                          playbackDuration.inMilliseconds)
-                      .clamp(0.0, 1.0)
-                  : 0.0,
-          onChanged: (value) => _seekToPosition(value),
-          activeColor: Colors.blue,
-          inactiveColor: Colors.grey[600],
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: Themes.third,
+            inactiveTrackColor: Themes.customWhite.withOpacity(0.3),
+            thumbColor: Themes.third,
+            overlayColor: Themes.third.withOpacity(0.2),
+          ),
+          child: Slider(
+            value:
+                playbackDuration.inMilliseconds > 0
+                    ? (playbackPosition.inMilliseconds /
+                            playbackDuration.inMilliseconds)
+                        .clamp(0.0, 1.0)
+                    : 0.0,
+            onChanged: (value) => _seekToPosition(value),
+          ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               _formatDuration(playbackPosition),
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(
+                color: Themes.customWhite.withOpacity(0.7),
+                fontSize: 12,
+              ),
             ),
             Text(
               _formatDuration(playbackDuration),
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(
+                color: Themes.customWhite.withOpacity(0.7),
+                fontSize: 12,
+              ),
             ),
           ],
         ),
@@ -114,18 +147,30 @@ class AudioPlayerControls extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        IconButton(
-          onPressed: _togglePlayback,
-          icon: Icon(
-            isPlaying ? Icons.stop : Icons.play_arrow,
-            color: Colors.white,
-            size: 32,
+        Container(
+          decoration: BoxDecoration(
+            color: Themes.customWhite.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: IconButton(
+            onPressed: _togglePlayback,
+            icon: Icon(
+              isPlaying ? Icons.stop : Icons.play_arrow,
+              color: Themes.customWhite,
+              size: 32,
+            ),
           ),
         ),
         if (onDelete != null)
-          IconButton(
-            onPressed: () => _showDeleteConfirmation(context),
-            icon: const Icon(Icons.delete, color: Colors.red, size: 32),
+          Container(
+            decoration: BoxDecoration(
+              color: Themes.error.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: IconButton(
+              onPressed: () => _showDeleteConfirmation(context),
+              icon: Icon(Icons.delete, color: Themes.error, size: 32),
+            ),
           ),
       ],
     );
@@ -166,29 +211,46 @@ class AudioPlayerControls extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          title: const Text(
-            'Delete Recording',
-            style: TextStyle(color: Colors.white),
+          backgroundColor: Themes.dark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
-          content: const Text(
+          title: Text(
+            'Delete Recording',
+            style: TextStyle(color: Themes.customWhite),
+          ),
+          content: Text(
             'Are you sure you want to delete this recording? This action cannot be undone.',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Themes.customWhite.withOpacity(0.8)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Themes.customWhite.withOpacity(0.6)),
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onDelete?.call();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Themes.error, Themes.error.withOpacity(0.8)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  onDelete?.call();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                ),
+                child: Text(
+                  'Delete',
+                  style: TextStyle(color: Themes.customWhite),
+                ),
               ),
             ),
           ],

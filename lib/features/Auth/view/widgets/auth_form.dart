@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/core/widgets/custom_text_fiels.dart';
-import 'package:smartgallery/features/My%20Intereset/interset_page.dart';
+import 'package:smartgallery/features/My%20Intereset/view/interset_page.dart';
 
 class AuthForm extends StatefulWidget {
   final bool isSignUp;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/core/widgets/interest_chip_widget.dart';
-import 'package:smartgallery/features/Display%20Interset/display_interset.dart';
-import 'package:smartgallery/features/My%20Intereset/widgets/intereset_header.dart';
+import 'package:smartgallery/features/Display%20Interset/view/display_interset.dart';
+import 'package:smartgallery/features/My%20Intereset/view/widgets/intereset_header.dart';
 
 import 'widgets/continue_button.dart';
 
@@ -68,7 +68,7 @@ class _InterestsPageState extends State<InterestsPage> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: Themes.customGradient, // Using your custom gradient
+          gradient: Themes.customGradient, 
         ),
         child: SafeArea(
           child: Column(

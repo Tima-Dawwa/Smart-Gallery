@@ -4,8 +4,9 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:record/record.dart';
-import 'package:smartgallery/features/Photos%20Gallery/presentation/view/widget/audio_player_controlles.dart';
-import 'package:smartgallery/features/Photos%20Gallery/presentation/view/widget/recording_preview_dialog.dart';
+import 'package:smartgallery/core/utils/themes.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view/widget/audio_player_controlles.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view/widget/recording_preview_dialog.dart';
 
 class RecordingBottomSheet extends StatefulWidget {
   final int photoIndex;
@@ -168,9 +169,12 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
     } catch (e) {
       debugPrint('Error setting audio source: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading audio: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading audio: $e'),
+            backgroundColor: Themes.error,
+          ),
+        );
       }
     }
   }
@@ -181,7 +185,10 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
       if (!hasPermission) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Microphone permission required')),
+            SnackBar(
+              content: const Text('Microphone permission required'),
+              backgroundColor: Themes.warning,
+            ),
           );
         }
         return;
@@ -220,9 +227,12 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
     } catch (e) {
       debugPrint('Error starting recording: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error starting recording: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error starting recording: $e'),
+            backgroundColor: Themes.error,
+          ),
+        );
       }
     }
   }
@@ -246,7 +256,10 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
           } else {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Recording too short or empty')),
+                SnackBar(
+                  content: const Text('Recording too short or empty'),
+                  backgroundColor: Themes.warning,
+                ),
               );
             }
           }
@@ -255,9 +268,12 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
     } catch (e) {
       debugPrint('Error stopping recording: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error stopping recording: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error stopping recording: $e'),
+            backgroundColor: Themes.error,
+          ),
+        );
       }
     }
   }
@@ -309,15 +325,21 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Recording saved successfully!')),
+          SnackBar(
+            content: const Text('Recording saved successfully!'),
+            backgroundColor: Themes.success,
+          ),
         );
       }
     } catch (e) {
       debugPrint('Error saving recording: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving recording: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving recording: $e'),
+            backgroundColor: Themes.error,
+          ),
+        );
       }
     }
   }
@@ -353,9 +375,12 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Recording deleted')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Recording deleted'),
+              backgroundColor: Themes.success,
+            ),
+          );
         }
       } catch (e) {
         debugPrint('Error deleting recording: $e');
@@ -367,9 +392,9 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * widget.heightRatio,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        gradient: Themes.customGradient,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -392,7 +417,7 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
       height: 4,
       margin: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[600],
+        color: Themes.customWhite.withOpacity(0.6),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -403,8 +428,8 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
       padding: const EdgeInsets.all(16),
       child: Text(
         'Voice Recording - Photo ${widget.photoIndex + 1}',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: Themes.customWhite,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
@@ -427,9 +452,12 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           'No recording found for this photo',
-          style: TextStyle(color: Colors.white70, fontSize: 16),
+          style: TextStyle(
+            color: Themes.customWhite.withOpacity(0.8),
+            fontSize: 16,
+          ),
         ),
         const SizedBox(height: 30),
         if (_isRecording) _buildRecordingDuration(),
@@ -443,10 +471,14 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
   Widget _buildRecordingDuration() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: Themes.customWhite.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Text(
         _formatDuration(_recordingDuration),
-        style: const TextStyle(
-          color: Colors.red,
+        style: TextStyle(
+          color: Themes.accent,
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),
@@ -461,19 +493,31 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
         width: 80,
         height: 80,
         decoration: BoxDecoration(
-          color: _isRecording ? Colors.red : Colors.red.withOpacity(0.8),
+          gradient:
+              _isRecording
+                  ? RadialGradient(
+                    colors: [Themes.error, Themes.error.withOpacity(0.7)],
+                    center: Alignment.center,
+                  )
+                  : RadialGradient(
+                    colors: [Themes.accent, Themes.darkPurple],
+                    center: Alignment.center,
+                  ),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.3),
+              color:
+                  _isRecording
+                      ? Themes.error.withOpacity(0.4)
+                      : Themes.accent.withOpacity(0.4),
               blurRadius: 20,
-              spreadRadius: _isRecording ? 10 : 0,
+              spreadRadius: _isRecording ? 10 : 5,
             ),
           ],
         ),
         child: Icon(
           _isRecording ? Icons.stop : Icons.mic,
-          color: Colors.white,
+          color: Themes.customWhite,
           size: 40,
         ),
       ),
@@ -483,7 +527,7 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
   Widget _buildRecordingInstructions() {
     return Text(
       _isRecording ? 'Recording... Tap to stop' : 'Tap to start recording',
-      style: const TextStyle(color: Colors.white, fontSize: 16),
+      style: TextStyle(color: Themes.customWhite, fontSize: 16),
     );
   }
 
