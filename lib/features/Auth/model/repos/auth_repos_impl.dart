@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:smartgallery/core/helpers/api_service.dart';
+import 'package:smartgallery/api/api_service.dart';
 import 'package:smartgallery/core/helpers/failure.dart';
 
 import 'package:smartgallery/features/Auth/model/repos/auth_repo.dart';

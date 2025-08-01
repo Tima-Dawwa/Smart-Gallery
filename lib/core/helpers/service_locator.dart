@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:smartgallery/core/helpers/api_service.dart';
+import 'package:smartgallery/api/api_service.dart';
 import 'package:smartgallery/features/Auth/model/repos/auth_repos_impl.dart';
 
 final getIt = GetIt.instance;

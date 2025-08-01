@@ -7,6 +7,7 @@ import 'package:record/record.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/audio_player_controlles.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/recording_preview_dialog.dart';
+import 'recording_bottom_sheet_content.dart';
 
 class RecordingBottomSheet extends StatefulWidget {
   final int photoIndex;
@@ -390,151 +391,20 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * widget.heightRatio,
-      decoration: BoxDecoration(
-        gradient: Themes.customGradient,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          _buildHandleBar(),
-          _buildTitle(),
-          Expanded(
-            child:
-                _hasExistingRecording
-                    ? _buildExistingRecording()
-                    : _buildNewRecording(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHandleBar() {
-    return Container(
-      width: 40,
-      height: 4,
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Themes.customWhite.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
-
-  Widget _buildTitle() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Text(
-        'Voice Recording - Photo ${widget.photoIndex + 1}',
-        style: TextStyle(
-          color: Themes.customWhite,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExistingRecording() {
-    return AudioPlayerControls(
-      recordingPath: _recordingPath!,
+    return RecordingBottomSheetContent(
+      photoIndex: widget.photoIndex,
+      heightRatio: widget.heightRatio,
+      hasExistingRecording: _hasExistingRecording,
+      recordingPath: _recordingPath,
+      isRecording: _isRecording,
       isPlaying: _isPlaying,
+      recordingDuration: _recordingDuration,
       playbackPosition: _playbackPosition,
       playbackDuration: _playbackDuration,
       audioPlayer: _audioPlayer,
-      onDelete: _recordingPath!.startsWith('assets/') ? null : _deleteRecording,
+      onStartRecording: _startRecording,
+      onStopRecording: _stopRecording,
+      onDeleteRecording: _deleteRecording,
     );
-  }
-
-  Widget _buildNewRecording() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'No recording found for this photo',
-          style: TextStyle(
-            color: Themes.customWhite.withOpacity(0.8),
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 30),
-        if (_isRecording) _buildRecordingDuration(),
-        _buildRecordingButton(),
-        const SizedBox(height: 20),
-        _buildRecordingInstructions(),
-      ],
-    );
-  }
-
-  Widget _buildRecordingDuration() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: Themes.customWhite.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _formatDuration(_recordingDuration),
-        style: TextStyle(
-          color: Themes.accent,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecordingButton() {
-    return GestureDetector(
-      onTap: _isRecording ? _stopRecording : _startRecording,
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          gradient:
-              _isRecording
-                  ? RadialGradient(
-                    colors: [Themes.error, Themes.error.withOpacity(0.7)],
-                    center: Alignment.center,
-                  )
-                  : RadialGradient(
-                    colors: [Themes.accent, Themes.darkPurple],
-                    center: Alignment.center,
-                  ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color:
-                  _isRecording
-                      ? Themes.error.withOpacity(0.4)
-                      : Themes.accent.withOpacity(0.4),
-              blurRadius: 20,
-              spreadRadius: _isRecording ? 10 : 5,
-            ),
-          ],
-        ),
-        child: Icon(
-          _isRecording ? Icons.stop : Icons.mic,
-          color: Themes.customWhite,
-          size: 40,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecordingInstructions() {
-    return Text(
-      _isRecording ? 'Recording... Tap to stop' : 'Tap to start recording',
-      style: TextStyle(color: Themes.customWhite, fontSize: 16),
-    );
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
   }
 }
