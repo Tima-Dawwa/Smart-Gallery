@@ -10,6 +10,7 @@ class CustomTextField extends StatefulWidget {
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
   final List<TextInputFormatter>? inputFormatters;
+  final bool enabled;
 
   const CustomTextField({
     super.key,
@@ -20,6 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.validator,
     this.inputFormatters,
+    this.enabled = true,
   });
 
   @override
@@ -36,9 +38,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
       keyboardType: widget.keyboardType,
       obscureText: widget.isPassword && !_isPasswordVisible,
       inputFormatters: widget.inputFormatters,
+      enabled: widget.enabled,
       decoration: InputDecoration(
         labelText: widget.labelText,
-        prefixIcon: Icon(widget.prefixIcon, color: Themes.primary),
+        prefixIcon: Icon(
+          widget.prefixIcon,
+          color: widget.enabled ? Themes.primary : Colors.grey,
+        ),
         suffixIcon:
             widget.isPassword
                 ? IconButton(
@@ -46,13 +52,16 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     _isPasswordVisible
                         ? Icons.visibility
                         : Icons.visibility_off,
-                    color: Themes.primary,
+                    color: widget.enabled ? Themes.primary : Colors.grey,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
+                  onPressed:
+                      widget.enabled
+                          ? () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          }
+                          : null,
                 )
                 : null,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -60,7 +69,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Themes.primary, width: 2),
         ),
-        labelStyle: TextStyle(color: Themes.primary),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.withOpacity(0.3), width: 1),
+        ),
+        labelStyle: TextStyle(
+          color: widget.enabled ? Themes.primary : Colors.grey,
+        ),
+        filled: !widget.enabled,
+        fillColor: widget.enabled ? null : Colors.grey.withOpacity(0.1),
       ),
       validator: widget.validator,
     );

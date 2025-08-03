@@ -2,11 +2,11 @@
 
 import 'package:dio/dio.dart';
 import 'package:smartgallery/core/helpers/service_locator.dart';
-import 'package:smartgallery/features/Auth/model/repos/auth_repos_impl.dart';
+import 'package:smartgallery/features/Auth/view%20model/auth_service.dart';
 
 class ApiService {
   // final String baseUrl = 'http://10.0.2.2:5000';
-  final String baseUrl = 'https://c75d-5-0-163-131.ngrok-free.app';
+  final String baseUrl = 'https://00d2164fd58f.ngrok-free.app';
   final Dio _dio;
 
   // final String token =
@@ -23,7 +23,7 @@ class ApiService {
       options: Options(
         headers: headers ??
             {
-              'Authorization': 'Bearer ${getIt.get<AuthRepoImpl>().token}',
+              'Authorization': 'Bearer ${getIt.get<AuthService>().token}',
             },
         extra: extra,
       ),
@@ -45,7 +45,7 @@ class ApiService {
       options: Options(
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${getIt.get<AuthRepoImpl>().token}',
+          'Authorization': 'Bearer ${getIt.get<AuthService>().token}',
         },
       ),
     );
@@ -64,7 +64,7 @@ class ApiService {
       options: Options(
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${getIt.get<AuthRepoImpl>().token}',
+          'Authorization': 'Bearer ${getIt.get<AuthService>().token}',
         },
       ),
     );
@@ -85,7 +85,7 @@ class ApiService {
       options: Options(
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${getIt.get<AuthRepoImpl>().token}',
+          'Authorization': 'Bearer ${getIt.get<AuthService>().token}',
         },
       ),
     );
