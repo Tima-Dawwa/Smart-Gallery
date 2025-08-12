@@ -5,12 +5,14 @@ class ContinueButton extends StatelessWidget {
   final bool isEnabled;
   final int selectedCount;
   final VoidCallback onPressed;
+  final bool isLoading;
 
   const ContinueButton({
     super.key,
     required this.isEnabled,
     required this.selectedCount,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -20,15 +22,18 @@ class ContinueButton extends StatelessWidget {
       width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
-        gradient: isEnabled ? Themes.primaryGradient : null,
-        color: isEnabled ? null : Colors.white.withOpacity(0.2),
+        gradient: isEnabled && !isLoading ? Themes.primaryGradient : null,
+        color: isEnabled && !isLoading ? null : Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isEnabled ? Colors.transparent : Colors.white.withOpacity(0.3),
+          color:
+              isEnabled && !isLoading
+                  ? Colors.transparent
+                  : Colors.white.withOpacity(0.3),
           width: 1,
         ),
         boxShadow:
-            isEnabled
+            isEnabled && !isLoading
                 ? [
                   BoxShadow(
                     color: Themes.primary.withOpacity(0.3),
@@ -41,14 +46,24 @@ class ContinueButton extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isEnabled ? onPressed : null,
+          onTap: isEnabled && !isLoading ? onPressed : null,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (isEnabled && selectedCount > 0) ...[
+                if (isLoading) ...[
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ] else if (isEnabled && selectedCount > 0) ...[
                   Container(
                     width: 24,
                     height: 24,
@@ -70,17 +85,21 @@ class ContinueButton extends StatelessWidget {
                   const SizedBox(width: 12),
                 ],
                 Text(
-                  isEnabled ? 'Continue' : 'Select interests to continue',
+                  isLoading
+                      ? 'Saving...'
+                      : isEnabled
+                      ? 'Continue'
+                      : 'Select interests to continue',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color:
-                        isEnabled
+                        isEnabled && !isLoading
                             ? Colors.white
                             : Colors.white.withOpacity(0.6),
                   ),
                 ),
-                if (isEnabled) ...[
+                if (isEnabled && !isLoading) ...[
                   const SizedBox(width: 8),
                   const Icon(
                     Icons.arrow_forward,

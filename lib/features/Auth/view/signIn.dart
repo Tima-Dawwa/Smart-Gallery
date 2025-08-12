@@ -28,7 +28,6 @@ class _SignInPageState extends State<SignInPage> {
     final authCubit = context.read<AuthCubit>();
 
     if (_isSignIn) {
-      // Sign Up mode - requires age
       if (age == null || age.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Age is required for sign up')),
@@ -49,7 +48,6 @@ class _SignInPageState extends State<SignInPage> {
         );
       }
     } else {
-      // Login mode
       await authCubit.login(username: name, password: password);
     }
   }
@@ -60,19 +58,25 @@ class _SignInPageState extends State<SignInPage> {
       body: BlocListener<AuthCubit, AuthStates>(
         listener: (context, state) {
           if (state is SuccessAuthState) {
-            // Navigate to home page or show success message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  _isSignIn ? 'Sign up successful!' : 'Login successful!',
+                  '${_isSignIn ? 'Sign up' : 'Login'} successful! User ID: ${state.userId}',
                 ),
                 backgroundColor: Colors.green,
               ),
             );
-            // TODO: Navigate to home page
-            // Navigator.pushReplacementNamed(context, '/home');
+
+            // TODO: Navigate to home page with user data
+            // You can now pass the userId to the next screen
+            // Navigator.pushReplacementNamed(
+            //   context,
+            //   '/home',
+            //   arguments: {'userId': state.userId}
+            // );
+
+            print('User authenticated with ID: ${state.userId}');
           } else if (state is FailureAuthState) {
-            // Show error message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.failure.errMessage),
@@ -114,7 +118,6 @@ class _SignInPageState extends State<SignInPage> {
                             onSubmit: _handleSubmit,
                           ),
                           const SizedBox(height: 24),
-                          // Show loading indicator when state is loading
                           if (state is LoadingAuthState)
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 16.0),

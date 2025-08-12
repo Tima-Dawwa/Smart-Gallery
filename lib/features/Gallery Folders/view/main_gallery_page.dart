@@ -104,15 +104,25 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
   }
 
   void _navigateToUpdateInterests() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => SelectedInterestsPage(
-              initialSelectedInterests: {"Photography", "Books"},
-            ),
-      ),
-    );
+   void navigateToInterestsPage(BuildContext context, int userId) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => SelectedInterestsPage(
+                userId: userId,
+                onInterestsChanged: (interests) {
+                  // Optional callback when interests change
+                  print('Interests changed: $interests');
+                },
+                onSave: () {
+                  // Optional callback when save is pressed
+                  print('Interests saved');
+                },
+              ),
+        ),
+      );
+    }
     print('Navigate to update interests page');
   }
 

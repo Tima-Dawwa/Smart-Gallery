@@ -4,6 +4,10 @@ import 'package:smartgallery/core/helpers/service_locator.dart';
 import 'package:smartgallery/features/Auth/view%20model/auth_cubit.dart';
 import 'package:smartgallery/features/Auth/view%20model/auth_service.dart';
 import 'package:smartgallery/features/Auth/view/signIn.dart';
+import 'package:smartgallery/features/Display%20Interset/view%20model/display_intereset_cubit.dart';
+import 'package:smartgallery/features/Display%20Interset/view%20model/display_interset_service.dart';
+import 'package:smartgallery/features/My%20Intereset/view%20model/my_interset_cubit.dart';
+import 'package:smartgallery/features/My%20Intereset/view%20model/my_interset_services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +23,14 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => AuthCubit(getIt.get<AuthService>())),
+        BlocProvider(
+          create:
+              (context) =>
+                  ClassificationCubit(getIt.get<ClassificationService>()),
+        ),
+        BlocProvider(
+          create: (context) => IntersetCubit(getIt.get<IntersetService>()),
+        ),
       ],
       child: MaterialApp(
         title: 'Pixort',

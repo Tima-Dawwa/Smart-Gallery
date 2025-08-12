@@ -6,6 +6,7 @@ import 'package:smartgallery/core/helpers/failure.dart';
 class AuthService {
   final ApiService api;
   String? token;
+  int? currentUserId; 
 
   AuthService(this.api);
 
@@ -18,8 +19,13 @@ class AuthService {
         endPoint: '/api/auth/login',
         body: {'username': username, 'password': password},
       );
-      // token = response['token'];
-      return right(response);
+      
+      if (response.containsKey('userid')) {
+        currentUserId = response['userid']; 
+        return right(response);
+      } else {
+        return left(Failure(errMessage: 'Login failed - no user ID received'));
+      }
     } catch (e) {
       if (e is DioException) {
         return left(Failure.fromDioException(e));
@@ -35,7 +41,6 @@ class AuthService {
     required String username,
     required int age,
     required String password,
-  
   }) async {
     try {
       Map<String, dynamic> response = await api.post(
@@ -46,8 +51,13 @@ class AuthService {
           "password": password,
         },
       );
-      // token = response['token'];
-      return right(response);
+      
+      if (response.containsKey('userid')) {
+        currentUserId = response['userid']; 
+        return right(response);
+      } else {
+        return left(Failure(errMessage: 'Registration failed - no user ID received'));
+      }
     } catch (e) {
       if (e is DioException) {
         return left(Failure.fromDioException(e));
@@ -56,5 +66,14 @@ class AuthService {
         Failure(errMessage: 'Something went wrong (not DioException)'),
       );
     }
+  }
+
+  int? getCurrentUserId() {
+    return currentUserId;
+  }
+
+  void logout() {
+    currentUserId = null;
+    token = null;
   }
 }
