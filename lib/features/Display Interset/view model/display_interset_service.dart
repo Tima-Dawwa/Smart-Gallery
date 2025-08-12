@@ -77,8 +77,10 @@ class ClassificationService {
     try {
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/classification/insert_user_classification',
-        body: {'user_id': userId, 'classification_type': classificationType},
+        body: {'userid': userId, 'classificationName': classificationType},
       );
+
+      print('Insert classification response: $response');
 
       if (response.containsKey('message')) {
         return right(response['message']);
@@ -90,12 +92,14 @@ class ClassificationService {
         );
       }
     } catch (e) {
+      print('Error in insertUserClassification: $e');
       if (e is DioException) {
         return left(Failure.fromDioException(e));
       } else {
         return left(
           Failure(
-            errMessage: 'Something went wrong while inserting classification',
+            errMessage:
+                'Something went wrong while inserting classification: $e',
           ),
         );
       }
@@ -109,8 +113,10 @@ class ClassificationService {
     try {
       Map<String, dynamic> response = await api.delete(
         endPoint: '/api/classification/delete_user_classification',
-        body: {'user_id': userId, 'classification_type': classificationType},
+        body: {'userid': userId, 'classification_type': classificationType},
       );
+
+      print('Delete classification response: $response');
 
       if (response.containsKey('message')) {
         return right(response['message']);
@@ -122,12 +128,14 @@ class ClassificationService {
         );
       }
     } catch (e) {
+      print('Error in deleteUserClassification: $e');
       if (e is DioException) {
         return left(Failure.fromDioException(e));
       } else {
         return left(
           Failure(
-            errMessage: 'Something went wrong while deleting classification',
+            errMessage:
+                'Something went wrong while deleting classification: $e',
           ),
         );
       }

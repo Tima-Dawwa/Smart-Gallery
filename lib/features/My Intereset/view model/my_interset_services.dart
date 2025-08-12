@@ -31,11 +31,9 @@ class IntersetService {
 
       List<String> types;
       if (response is List) {
-        // Direct list response
         types = List<String>.from(response);
       } else if (response is Map<String, dynamic> &&
           response.containsKey('types')) {
-        // Map response with 'types' key
         if (response['types'] is List) {
           types = List<String>.from(response['types']);
         } else {
@@ -115,7 +113,7 @@ class IntersetService {
     try {
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/classification/insert_user_classification',
-        body: {'user_id': userId, 'classification_type': classificationType},
+        body: {'userid': userId, 'classificationName': classificationType},
       );
 
       print('Insert classification response: $response');
@@ -151,7 +149,7 @@ class IntersetService {
     try {
       Map<String, dynamic> response = await api.delete(
         endPoint: '/api/classification/delete_user_classification',
-        body: {'user_id': userId, 'classification_type': classificationType},
+        body: {'userid': userId, 'classification_type': classificationType},
       );
 
       print('Delete classification response: $response');
