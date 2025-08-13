@@ -15,7 +15,6 @@ class IntersetService {
       try {
         response = await api.get(endPoint: '/api/classification/types');
       } catch (typeError) {
-
         print('Type error caught, trying alternative approach: $typeError');
 
         return left(

@@ -4,8 +4,14 @@ import 'package:smartgallery/core/utils/themes.dart';
 class FolderCard extends StatelessWidget {
   final Map<String, dynamic> folder;
   final VoidCallback onTap;
+  final VoidCallback? onSettings;
 
-  const FolderCard({super.key, required this.folder, required this.onTap});
+  const FolderCard({
+    super.key,
+    required this.folder,
+    required this.onTap,
+    this.onSettings,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +63,33 @@ class FolderCard extends StatelessWidget {
                           ),
                         ),
                       ),
+
+                    // Settings Button
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (onSettings != null) {
+                            onSettings!();
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Themes.customBlack.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.settings,
+                            color: Themes.customWhite,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Photo Count
                     Positioned(
                       top: 8,
                       right: 8,
