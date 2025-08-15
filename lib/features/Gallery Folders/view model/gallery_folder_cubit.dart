@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/media.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/folders.dart';
 import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_service.dart';
 import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_states.dart';
 
@@ -87,24 +89,30 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
       (failure) {
         emit(FailureGalleryFolderState(failure: failure));
       },
-      (data) {
+      (mediaList) {
         print(
-          'Folder media loaded for folder $folderId: ${data['media']?.length ?? 0} items',
+          'Folder media loaded for folder $folderId: ${mediaList.length} items',
         );
-        emit(SuccessFolderMediaState(data: data));
+
+        // Filter out media items that have no actual content
+        List<Media> validMedia =
+            mediaList.where((media) => media.hasMedia).cast<Media>().toList();
+
+        print('Valid media items: ${validMedia.length}');
+        emit(SuccessFolderMediaState(mediaList: validMedia));
       },
     );
   }
 
   Future<void> uploadImages({
     required List<String> imagePaths,
-    required String userName,
+    required String userId,
   }) async {
     emit(LoadingUploadImagesState());
 
     var response = await galleryFolderService.uploadImages(
       imagePaths: imagePaths,
-      userName: userName,
+      userId: userId,
     );
 
     response.fold(
@@ -118,6 +126,7 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
     );
   }
 
+  // Updated getAllFolders method to work with List<Folder>
   Future<void> getAllFolders({required int userId}) async {
     emit(LoadingAllFoldersState());
 
@@ -127,11 +136,9 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
       (failure) {
         emit(FailureGalleryFolderState(failure: failure));
       },
-      (data) {
-        print(
-          'All folders loaded for user $userId: ${data['folders']?.length ?? 0} folders',
-        );
-        emit(SuccessAllFoldersState(data: data));
+      (folders) {
+        print('All folders loaded for user $userId: ${folders.length} folders');
+        emit(SuccessAllFoldersState(folders: folders));
       },
     );
   }

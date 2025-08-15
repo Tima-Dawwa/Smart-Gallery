@@ -1,4 +1,6 @@
 import 'package:smartgallery/core/helpers/failure.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/media.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/folders.dart';
 
 abstract class GalleryFolderStates {}
 
@@ -18,19 +20,18 @@ class FailureGalleryFolderState extends GalleryFolderStates {
   FailureGalleryFolderState({required this.failure});
 }
 
-
 class SuccessFolderMediaState extends GalleryFolderStates {
-  final Map<String, dynamic> data;
+  final List<Media> mediaList;
 
-  SuccessFolderMediaState({required this.data});
+  SuccessFolderMediaState({required this.mediaList});
 }
 
+// Updated to use List<Folder> instead of Map<String, dynamic>
 class SuccessAllFoldersState extends GalleryFolderStates {
-  final Map<String, dynamic> data;
+  final List<Folder> folders;
 
-  SuccessAllFoldersState({required this.data});
+  SuccessAllFoldersState({required this.folders});
 }
-
 
 class LoadingFolderMediaState extends GalleryFolderStates {}
 
