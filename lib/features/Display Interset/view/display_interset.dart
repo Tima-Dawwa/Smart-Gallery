@@ -155,7 +155,7 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
     Navigator.pop(context, _selectedInterests);
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => MainGalleryPage()),
+      MaterialPageRoute(builder: (context) => MainGalleryPage(userId: widget.userId,)),
     );
   }
 

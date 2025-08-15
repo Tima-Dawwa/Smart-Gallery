@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/folders.dart';
 
 class FolderCard extends StatelessWidget {
-  final Map<String, dynamic> folder;
+  final Folder folder;
   final VoidCallback onTap;
   final VoidCallback? onSettings;
 
@@ -41,13 +42,13 @@ class FolderCard extends StatelessWidget {
                     top: Radius.circular(16),
                   ),
                   image: DecorationImage(
-                    image: AssetImage(folder['coverImage']),
+                    image: NetworkImage(folder.coverImage),
                     fit: BoxFit.cover,
                   ),
                 ),
                 child: Stack(
                   children: [
-                    if (folder['isLocked'])
+                    if (folder.isLocked)
                       Container(
                         decoration: BoxDecoration(
                           color: Themes.customBlack.withOpacity(0.6),
@@ -103,7 +104,7 @@ class FolderCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${folder['photoCount']}',
+                          '${folder.photoCount ?? 0}',
                           style: TextStyle(
                             color: Themes.customWhite,
                             fontSize: 12,
@@ -126,12 +127,12 @@ class FolderCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        if (folder['isLocked'])
+                        if (folder.isLocked)
                           Icon(Icons.lock, size: 16, color: Themes.accent),
-                        if (folder['isLocked']) const SizedBox(width: 4),
+                        if (folder.isLocked) const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            folder['name'],
+                            folder.name,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,

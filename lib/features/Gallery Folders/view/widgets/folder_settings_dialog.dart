@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartgallery/core/utils/themes.dart';
+import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_cubit.dart';
+import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_states.dart';
 
 class FolderSettingsDialog extends StatefulWidget {
   final Map<String, dynamic> folder;
   final Function(Map<String, dynamic>) onFolderUpdated;
+  final Function(Map<String, dynamic>)? onFolderDeleted;
 
   const FolderSettingsDialog({
     super.key,
     required this.folder,
     required this.onFolderUpdated,
+    this.onFolderDeleted,
   });
 
   @override
@@ -24,6 +29,7 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
   bool _showConfirmPassword = false;
   String? _nameError;
   String? _passwordError;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -46,7 +52,7 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
     super.dispose();
   }
 
-  void _validateAndSave() {
+  void _validateAndSave() async {
     setState(() {
       _nameError = null;
       _passwordError = null;
@@ -84,234 +90,487 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       }
     }
 
-    // Create updated folder
-    final updatedFolder = Map<String, dynamic>.from(widget.folder);
-    updatedFolder['name'] = _nameController.text.trim();
-    updatedFolder['isLocked'] = _isLocked;
-    updatedFolder['password'] = _isLocked ? _passwordController.text : null;
+    setState(() {
+      _isProcessing = true;
+    });
 
-    widget.onFolderUpdated(updatedFolder);
-    Navigator.of(context).pop();
+    // Get folder ID properly - handle both string and int cases
+    int folderId = 0;
+    final folderIdValue = widget.folder['id'];
+
+    if (folderIdValue is int) {
+      folderId = folderIdValue;
+    } else if (folderIdValue is String) {
+      folderId = int.tryParse(folderIdValue) ?? 0;
+    }
+
+    print('Processing folder with ID: $folderId');
+    print('Original folder data: ${widget.folder}');
+
+    if (folderId == 0) {
+      setState(() {
+        _isProcessing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid folder ID'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      bool hasUpdates = false;
+
+      // Update folder name if changed
+      if (_nameController.text.trim() != widget.folder['name']) {
+        print(
+          'Updating folder name from "${widget.folder['name']}" to "${_nameController.text.trim()}"',
+        );
+        await context.read<GalleryFolderCubit>().updateNameFolder(
+          folderId: folderId,
+          newName: _nameController.text.trim(),
+        );
+        hasUpdates = true;
+      }
+
+      // Update folder password if locked and password changed
+      if (_isLocked &&
+          _passwordController.text != (widget.folder['password'] ?? '')) {
+        print('Updating folder password');
+        await context.read<GalleryFolderCubit>().updateFolderPassword(
+          folderId: folderId,
+          newPassword: _passwordController.text,
+        );
+        hasUpdates = true;
+      }
+
+      // If no backend updates but lock status changed, still update UI
+      if (!hasUpdates && _isLocked != (widget.folder['isLocked'] ?? false)) {
+        hasUpdates = true;
+      }
+
+      if (hasUpdates) {
+        // Create updated folder and notify parent
+        final updatedFolder = Map<String, dynamic>.from(widget.folder);
+        updatedFolder['name'] = _nameController.text.trim();
+        updatedFolder['isLocked'] = _isLocked;
+        updatedFolder['password'] = _isLocked ? _passwordController.text : null;
+
+        widget.onFolderUpdated(updatedFolder);
+
+        print('Folder updated successfully');
+      }
+
+      // Close dialog after successful update
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      print('Error updating folder: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating folder: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  void _deleteFolder() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.warning, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(
+                  'Delete Folder',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'Are you sure you want to delete "${widget.folder['name']}"? This action cannot be undone and all photos in this folder will be deleted.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cancel', style: TextStyle(color: Themes.accent)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close confirmation dialog
+                  Navigator.of(context).pop(); // Close settings dialog
+
+                  if (widget.onFolderDeleted != null) {
+                    widget.onFolderDeleted!(widget.folder);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text('Delete', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.settings, color: Themes.primary, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'Folder Settings',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Themes.primary,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(Icons.close, color: Themes.dark),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Folder Name Field
-            Text(
-              'Folder Name',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Themes.primary,
+    return BlocListener<GalleryFolderCubit, GalleryFolderStates>(
+      listener: (context, state) {
+        if (state is SuccessGalleryFolderState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.message,
+                style: TextStyle(color: Themes.customWhite),
+              ),
+              backgroundColor: Themes.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                hintText: 'Enter folder name',
-                errorText: _nameError,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Themes.accent),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Themes.primary, width: 2),
-                ),
-                prefixIcon: Icon(Icons.folder, color: Themes.primary),
+          );
+        } else if (state is FailureGalleryFolderState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error: ${state.failure.errMessage}',
+                style: TextStyle(color: Themes.customWhite),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Lock Toggle
-            Row(
-              children: [
-                Icon(
-                  _isLocked ? Icons.lock : Icons.lock_open,
-                  color: _isLocked ? Themes.accent : Themes.dark,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Password Protection',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Themes.primary,
-                  ),
-                ),
-                const Spacer(),
-                Switch(
-                  value: _isLocked,
-                  onChanged: (value) {
-                    setState(() {
-                      _isLocked = value;
-                      if (!value) {
-                        _passwordController.clear();
-                        _confirmPasswordController.clear();
-                        _passwordError = null;
-                      }
-                    });
-                  },
-                  activeColor: Themes.primary,
-                ),
-              ],
-            ),
-
-            // Password Fields (only show if locked)
-            if (_isLocked) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Password',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Themes.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordController,
-                obscureText: !_showPassword,
-                decoration: InputDecoration(
-                  hintText: 'Enter password',
-                  errorText: _passwordError,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Themes.accent),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Themes.primary, width: 2),
-                  ),
-                  prefixIcon: Icon(Icons.lock, color: Themes.primary),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _showPassword ? Icons.visibility : Icons.visibility_off,
-                      color: Themes.dark,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _showPassword = !_showPassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Confirm Password',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Themes.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _confirmPasswordController,
-                obscureText: !_showConfirmPassword,
-                decoration: InputDecoration(
-                  hintText: 'Confirm password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Themes.accent),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Themes.primary, width: 2),
-                  ),
-                  prefixIcon: Icon(Icons.lock, color: Themes.primary),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _showConfirmPassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: Themes.dark,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _showConfirmPassword = !_showConfirmPassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 24),
-
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Themes.accent),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+          );
+        }
+      },
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight:
+                MediaQuery.of(context).size.height *
+                0.85, // Limit height to prevent overflow
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
+          child: SingleChildScrollView(
+            // Add scrolling to prevent overflow
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.settings, color: Themes.primary, size: 24),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        // Wrap with Expanded to prevent overflow
+                        child: Text(
+                          'Folder Settings',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Themes.primary,
+                          ),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(color: Themes.accent),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close, color: Themes.dark),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Folder Name Field
+                  Text(
+                    'Folder Name',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Themes.primary,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _validateAndSave,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Themes.primary,
-                      shape: RoundedRectangleBorder(
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _nameController,
+                    enabled: !_isProcessing,
+                    decoration: InputDecoration(
+                      hintText: 'Enter folder name',
+                      errorText: _nameError,
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Themes.accent),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Themes.primary, width: 2),
+                      ),
+                      prefixIcon: Icon(Icons.folder, color: Themes.primary),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
-                    child: Text(
-                      'Save Changes',
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Lock Toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isLocked ? Icons.lock : Icons.lock_open,
+                          color: _isLocked ? Themes.accent : Themes.dark,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Password Protection',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Themes.primary,
+                            ),
+                          ),
+                        ),
+                        Switch(
+                          value: _isLocked,
+                          onChanged:
+                              _isProcessing
+                                  ? null
+                                  : (value) {
+                                    setState(() {
+                                      _isLocked = value;
+                                      if (!value) {
+                                        _passwordController.clear();
+                                        _confirmPasswordController.clear();
+                                        _passwordError = null;
+                                      }
+                                    });
+                                  },
+                          activeColor: Themes.primary,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Password Fields (only show if locked)
+                  if (_isLocked) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Password',
                       style: TextStyle(
-                        color: Themes.customWhite,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Themes.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: !_showPassword,
+                      enabled: !_isProcessing,
+                      decoration: InputDecoration(
+                        hintText: 'Enter password',
+                        errorText: _passwordError,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Themes.accent),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Themes.primary,
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(Icons.lock, color: Themes.primary),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Themes.dark,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showPassword = !_showPassword;
+                            });
+                          },
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Confirm Password',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Themes.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _confirmPasswordController,
+                      obscureText: !_showConfirmPassword,
+                      enabled: !_isProcessing,
+                      decoration: InputDecoration(
+                        hintText: 'Confirm password',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Themes.accent),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Themes.primary,
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(Icons.lock, color: Themes.primary),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Themes.dark,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showConfirmPassword = !_showConfirmPassword;
+                            });
+                          },
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  // Delete Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _isProcessing ? null : _deleteFolder,
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      label: Text(
+                        'Delete Folder',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 16),
+
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed:
+                              _isProcessing
+                                  ? null
+                                  : () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Themes.accent),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(color: Themes.accent),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _isProcessing ? null : _validateAndSave,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Themes.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child:
+                              _isProcessing
+                                  ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Themes.customWhite,
+                                      ),
+                                    ),
+                                  )
+                                  : Text(
+                                    'Save Changes',
+                                    style: TextStyle(
+                                      color: Themes.customWhite,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Add some bottom padding to ensure content is visible
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,70 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/core/widgets/password_dialog.dart';
 import 'package:smartgallery/features/Display%20Interset/view/display_interset.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/folders.dart';
 import 'package:smartgallery/features/Gallery%20Folders/view/widgets/folder_card.dart';
 import 'package:smartgallery/features/Gallery%20Folders/view/widgets/folder_settings_dialog.dart';
 import 'package:smartgallery/features/Gallery%20Folders/view/widgets/gallery_header.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_grid.dart';
+import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_cubit.dart';
+import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_states.dart';
 
 class MainGalleryPage extends StatefulWidget {
-  const MainGalleryPage({super.key});
+  final int userId; // Add userId parameter
+
+  const MainGalleryPage({super.key, required this.userId});
 
   @override
   State<MainGalleryPage> createState() => _MainGalleryPageState();
 }
 
 class _MainGalleryPageState extends State<MainGalleryPage> {
-  List<Map<String, dynamic>> _folders = [
-    {
-      'id': '1',
-      'name': 'Travel Photos',
-      'photoCount': 25,
-      'coverImage': 'assets/travel.jpeg',
-      'isLocked': false,
-      'password': null,
-    },
-    {
-      'id': '2',
-      'name': 'Family',
-      'photoCount': 48,
-      'coverImage': 'assets/family.jpeg',
-      'isLocked': false,
-      'password': null,
-    },
-    {
-      'id': '3',
-      'name': 'Private',
-      'photoCount': 12,
-      'coverImage': 'assets/private.jpeg',
-      'isLocked': true,
-      'password': '1234',
-    },
-    {
-      'id': '4',
-      'name': 'Work',
-      'photoCount': 33,
-      'coverImage': 'assets/work.jpeg',
-      'isLocked': false,
-      'password': null,
-    },
-    {
-      'id': '5',
-      'name': 'Vacation 2024',
-      'photoCount': 67,
-      'coverImage': 'assets/vacation.jpeg',
-      'isLocked': true,
-      'password': 'vacation',
-    },
-    {
-      'id': '6',
-      'name': 'Events',
-      'photoCount': 19,
-      'coverImage': 'assets/event.jpeg',
-      'isLocked': false,
-      'password': null,
-    },
-  ];
+  List<Map<String, dynamic>> _folders = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFolders();
+  }
+
+  void _loadFolders() {
+    context.read<GalleryFolderCubit>().getAllFolders(userId: widget.userId);
+  }
 
   void _openFolder(Map<String, dynamic> folder) {
     if (folder['isLocked']) {
@@ -109,11 +77,13 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
           (context) => FolderSettingsDialog(
             folder: folder,
             onFolderUpdated: _updateFolder,
+            onFolderDeleted: _deleteFolder,
           ),
     );
   }
 
-  void _updateFolder(Map<String, dynamic> updatedFolder) {
+ void _updateFolder(Map<String, dynamic> updatedFolder) {
+    // Update local state immediately for better UX
     setState(() {
       final index = _folders.indexWhere(
         (folder) => folder['id'] == updatedFolder['id'],
@@ -123,18 +93,15 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
       }
     });
 
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Folder "${updatedFolder['name']}" updated successfully!',
-          style: TextStyle(color: Themes.customWhite),
-        ),
-        backgroundColor: Themes.primary,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+    print('Folder updated locally: ${updatedFolder['name']}');
+    print('Is locked: ${updatedFolder['isLocked']}');
+    print('Password: ${updatedFolder['password']}');
+  }
+
+  void _deleteFolder(Map<String, dynamic> folder) {
+    context.read<GalleryFolderCubit>().deleteFolder(
+      folderName: folder['name'],
+      userId: widget.userId,
     );
   }
 
@@ -144,7 +111,7 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
       MaterialPageRoute(
         builder:
             (context) => SelectedInterestsPage(
-              userId: 1, // Replace with actual user ID
+              userId: widget.userId,
               onInterestsChanged: (interests) {
                 print('Interests changed: $interests');
               },
@@ -158,14 +125,6 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
 
   void _onPhotoAdded(String photoPath) {
     print('Photo added to gallery: $photoPath');
-
-    // You can implement logic here to:
-    // 1. Show a folder selection dialog
-    // 2. Add the photo to a default folder
-    // 3. Create a new folder for the photo
-    // 4. Send the photo to backend processing
-
-    // Example: Show dialog to select folder
     _showFolderSelectionDialog(photoPath);
   }
 
@@ -204,7 +163,9 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
                       image: DecorationImage(
-                        image: AssetImage(folder['coverImage']),
+                        image: AssetImage(
+                          folder['coverImage'] ?? 'assets/travel.jpeg',
+                        ),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -258,39 +219,23 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
   }
 
   void _addPhotoToFolder(String photoPath, Map<String, dynamic> folder) {
+    // Upload image using Cubit
+    context.read<GalleryFolderCubit>().uploadImages(
+      imagePaths: [photoPath],
+      userId: widget.userId.toString(),
+    );
+
+    // Update local state
     setState(() {
-      // Update photo count
       final index = _folders.indexWhere((f) => f['id'] == folder['id']);
       if (index != -1) {
         _folders[index]['photoCount'] =
             (_folders[index]['photoCount'] ?? 0) + 1;
       }
     });
-
-    // TODO: Implement actual photo addition logic
-    print('Adding photo $photoPath to folder ${folder['name']}');
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Photo added to "${folder['name']}" successfully!',
-          style: TextStyle(color: Themes.customWhite),
-        ),
-        backgroundColor: Themes.primary,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-      ),
-    );
   }
 
   void _createNewFolder(String photoPath) {
-    // TODO: Implement new folder creation
-    print('Creating new folder with photo: $photoPath');
-
-    // Show a dialog to get folder name
     showDialog(
       context: context,
       builder: (context) {
@@ -327,11 +272,18 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
             ElevatedButton(
               onPressed: () {
                 if (nameController.text.trim().isNotEmpty) {
+                  // First upload the image
+                  context.read<GalleryFolderCubit>().uploadImages(
+                    imagePaths: [photoPath],
+                    userId: widget.userId.toString(),
+                  );
+
+                  // Create new folder locally (in real app, this would be handled by backend)
                   final newFolder = {
                     'id': DateTime.now().millisecondsSinceEpoch.toString(),
                     'name': nameController.text.trim(),
                     'photoCount': 1,
-                    'coverImage': 'assets/travel.jpeg', // Default cover
+                    'coverImage': 'assets/travel.jpeg',
                     'isLocked': false,
                     'password': null,
                   };
@@ -341,25 +293,6 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
                   });
 
                   Navigator.of(context).pop();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'New folder "${newFolder['name']}" created with photo!',
-                        style: TextStyle(color: Themes.customWhite),
-                      ),
-                      backgroundColor: Themes.primary,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      margin: const EdgeInsets.only(
-                        left: 16,
-                        right: 16,
-                        bottom: 16,
-                      ),
-                    ),
-                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -401,39 +334,96 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 18),
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: GalleryHeader(
-                foldersCount: _folders.length,
-                onUpdateInterests: _navigateToUpdateInterests,
-                onPhotoAdded: _onPhotoAdded, // Pass the callback
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.85,
+      body: BlocListener<GalleryFolderCubit, GalleryFolderStates>(
+        listener: (context, state) {
+          if (state is SuccessAllFoldersState) {
+            setState(() {
+              _isLoading = false;
+              // Convert List<Folder> to List<Map<String, dynamic>> using toUIMap()
+              _folders =
+                  state.folders.map((folder) => folder.toUIMap()).toList();
+            });
+          } else if (state is FailureGalleryFolderState) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Error: ${state.failure.errMessage}',
+                  style: TextStyle(color: Themes.customWhite),
                 ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final folder = _folders[index];
-                  return FolderCard(
-                    folder: folder,
-                    onTap: () => _openFolder(folder),
-                    onSettings: () => _showFolderSettings(folder),
-                  );
-                }, childCount: _folders.length),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-          ],
-        ),
+            );
+          } else if (state is SuccessGalleryFolderState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.message,
+                  style: TextStyle(color: Themes.customWhite),
+                ),
+                backgroundColor: Themes.primary,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            );
+            // Refresh folders after successful operations
+            _loadFolders();
+          }
+        },
+        child:
+            _isLoading
+                ? Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Themes.primary),
+                  ),
+                )
+                : Padding(
+                  padding: const EdgeInsets.only(top: 18),
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: GalleryHeader(
+                          foldersCount: _folders.length,
+                          onUpdateInterests: _navigateToUpdateInterests,
+                          onPhotoAdded: _onPhotoAdded,
+                          userId: widget.userId,
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.85,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final folder = _folders[index];
+                            return FolderCard(
+                              folder: Folder.fromUIMap(folder),
+                              onTap: () => _openFolder(folder),
+                              onSettings: () => _showFolderSettings(folder),
+                            );
+                          }, childCount: _folders.length),
+                        ),
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                    ],
+                  ),
+                ),
       ),
     );
   }
