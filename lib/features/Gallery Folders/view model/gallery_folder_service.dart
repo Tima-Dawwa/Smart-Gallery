@@ -15,14 +15,12 @@ class GalleryFolderService {
     required String newName,
   }) async {
     try {
-      print('Updating folder - ID: $folderId, Name: $newName');
 
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/folder/update_folderName',
         body: {'folder_id': folderId.toString(), 'new_name': newName.trim()},
       );
 
-      print('Update name response: $response');
 
       if (response.containsKey('message') ||
           response.containsKey('success') ||
@@ -36,10 +34,8 @@ class GalleryFolderService {
         );
       }
     } catch (e) {
-      print('Error in updateNameFolder: $e');
       if (e is DioException) {
-        print('DioException details: ${e.response?.data}');
-        print('DioException status code: ${e.response?.statusCode}');
+ 
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -56,16 +52,13 @@ class GalleryFolderService {
     required String newPassword,
   }) async {
     try {
-      print('Updating folder password - ID: $folderId, Password: $newPassword');
 
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/folder/updateFolderPassword',
         body: {'folder_id': folderId.toString(), 'new_password': newPassword},
       );
 
-      print('Update password response: $response');
 
-      // Check for success in multiple ways
       if (response.containsKey('message') ||
           response.containsKey('success') ||
           (response.containsKey('success') && response['success'] == true)) {
@@ -80,10 +73,8 @@ class GalleryFolderService {
         );
       }
     } catch (e) {
-      print('Error in updateFolderPassword: $e');
       if (e is DioException) {
-        print('DioException details: ${e.response?.data}');
-        print('DioException status code: ${e.response?.statusCode}');
+      
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -101,19 +92,11 @@ class GalleryFolderService {
     required int userId,
   }) async {
     try {
-      print('Deleting folder - Name: $folderName, UserID: $userId');
 
       Map<String, dynamic> response = await api.delete(
         endPoint: '/api/folder/deleteFolder',
-        body: {
-          'folder_name': folderName.trim(),
-          'user_id':
-              userId
-                  .toString(), // Ensure it's sent as string if backend expects string
-        },
+        body: {'folder_name': folderName.trim(), 'user_id': userId.toString()},
       );
-
-      print('Delete folder response: $response');
 
       if (response.containsKey('message') ||
           response.containsKey('success') ||
@@ -125,9 +108,7 @@ class GalleryFolderService {
         );
       }
     } catch (e) {
-      print('Error in deleteFolder: $e');
       if (e is DioException) {
-        print('DioException details: ${e.response?.data}');
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -141,8 +122,6 @@ class GalleryFolderService {
     required int folderId,
   }) async {
     try {
-      print('Getting folder media for folder ID: $folderId');
-
       Map<String, dynamic> response = await api.get(
         endPoint: '/api/folder/get_foldermedia/$folderId',
       );
@@ -170,9 +149,7 @@ class GalleryFolderService {
         );
       }
     } catch (e) {
-      print('Error in getFolderMedia: $e');
       if (e is DioException) {
-        print('DioException details: ${e.response?.data}');
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -189,9 +166,6 @@ class GalleryFolderService {
     required String userId,
   }) async {
     try {
-      print('Uploading images for user: $userId');
-      print('Image paths: $imagePaths');
-
       FormData formData = FormData();
 
       for (String imagePath in imagePaths) {
@@ -200,15 +174,12 @@ class GalleryFolderService {
         );
       }
 
-      // FIXED: Changed from 'userName' to 'userid' to match backend expectation
       formData.fields.add(MapEntry('userid', userId));
 
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/media/upload-images',
         body: formData,
       );
-
-      print('Upload images response: $response');
 
       if (response.containsKey('message') ||
           response.containsKey('success') ||
@@ -220,9 +191,7 @@ class GalleryFolderService {
         );
       }
     } catch (e) {
-      print('Error in uploadImages: $e');
       if (e is DioException) {
-        print('DioException details: ${e.response?.data}');
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -238,13 +207,9 @@ class GalleryFolderService {
     required int userId,
   }) async {
     try {
-      print('Getting all folders for user ID: $userId');
-
       Map<String, dynamic> response = await api.get(
         endPoint: '/api/folder/get_all_folders/$userId',
       );
-
-      print('Get all folders response: $response');
 
       if (response.containsKey('success') && response['success'] == true) {
         List<Folder> folders = [];
@@ -252,12 +217,10 @@ class GalleryFolderService {
         if (response['folders'] != null && response['folders'] is List) {
           for (var folderJson in response['folders']) {
             try {
-              // Convert the JSON to Folder model
               Folder folder = Folder.fromJson(folderJson);
               folders.add(folder);
             } catch (e) {
               print('Error parsing folder item: $e');
-              // Continue parsing other folders even if one fails
             }
           }
         }
@@ -269,15 +232,107 @@ class GalleryFolderService {
         );
       }
     } catch (e) {
-      print('Error in getAllFolders: $e');
       if (e is DioException) {
-        print('DioException details: ${e.response?.data}');
         return left(Failure.fromDioException(e));
       } else {
         return left(
           Failure(
             errMessage: 'Something went wrong while Getting All Folders: $e',
           ),
+        );
+      }
+    }
+  }
+
+  Future<Either<Failure, String>> updateAudio({
+    required int imageId,
+    required String audioPath,
+  }) async {
+    try {
+      print('Updating audio for image ID: $imageId');
+      print('Audio path: $audioPath');
+
+      FormData formData = FormData();
+
+      formData.fields.add(MapEntry('image_id', imageId.toString()));
+
+      formData.files.add(
+        MapEntry('audio', await MultipartFile.fromFile(audioPath)),
+      );
+
+      Map<String, dynamic> response = await api.post(
+        endPoint: '/api/media/updateAudio',
+        body: formData,
+      );
+
+      print('Update audio response: $response');
+
+      if (response.containsKey('message') ||
+          response.containsKey('success') ||
+          (response.containsKey('success') && response['success'] == true)) {
+        return right(response['message'] ?? 'Audio updated successfully');
+      } else {
+        return left(
+          Failure(errMessage: response['error'] ?? 'Failed To Update Audio'),
+        );
+      }
+    } catch (e) {
+      print('Error in updateAudio: $e');
+      if (e is DioException) {
+        print('DioException details: ${e.response?.data}');
+        print('DioException status code: ${e.response?.statusCode}');
+        return left(Failure.fromDioException(e));
+      } else {
+        return left(
+          Failure(errMessage: 'Something went wrong while Updating Audio: $e'),
+        );
+      }
+    }
+  }
+
+  Future<Either<Failure, String>> updateImage({
+    required int imageId,
+    required String imagePath,
+  }) async {
+    try {
+      print('Updating image for image ID: $imageId');
+      print('Image path: $imagePath');
+
+      FormData formData = FormData();
+
+      // Add the image_id as a field
+      formData.fields.add(MapEntry('image_id', imageId.toString()));
+
+      // Add the image file
+      formData.files.add(
+        MapEntry('image', await MultipartFile.fromFile(imagePath)),
+      );
+
+      Map<String, dynamic> response = await api.post(
+        endPoint: '/api/media/updateImage',
+        body: formData,
+      );
+
+      print('Update image response: $response');
+
+      if (response.containsKey('message') ||
+          response.containsKey('success') ||
+          (response.containsKey('success') && response['success'] == true)) {
+        return right(response['message'] ?? 'Image updated successfully');
+      } else {
+        return left(
+          Failure(errMessage: response['error'] ?? 'Failed To Update Image'),
+        );
+      }
+    } catch (e) {
+      print('Error in updateImage: $e');
+      if (e is DioException) {
+        print('DioException details: ${e.response?.data}');
+        print('DioException status code: ${e.response?.statusCode}');
+        return left(Failure.fromDioException(e));
+      } else {
+        return left(
+          Failure(errMessage: 'Something went wrong while Updating Image: $e'),
         );
       }
     }

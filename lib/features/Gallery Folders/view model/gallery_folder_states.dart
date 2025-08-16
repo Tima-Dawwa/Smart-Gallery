@@ -26,7 +26,6 @@ class SuccessFolderMediaState extends GalleryFolderStates {
   SuccessFolderMediaState({required this.mediaList});
 }
 
-// Updated to use List<Folder> instead of Map<String, dynamic>
 class SuccessAllFoldersState extends GalleryFolderStates {
   final List<Folder> folders;
 
@@ -44,3 +43,7 @@ class LoadingUpdateFolderNameState extends GalleryFolderStates {}
 class LoadingUpdateFolderPasswordState extends GalleryFolderStates {}
 
 class LoadingDeleteFolderState extends GalleryFolderStates {}
+
+class LoadingUpdateAudioState extends GalleryFolderStates {}
+
+class LoadingUpdateImageState extends GalleryFolderStates {}

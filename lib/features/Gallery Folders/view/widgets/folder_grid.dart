@@ -1,83 +1,131 @@
 import 'package:flutter/material.dart';
 import 'package:smartgallery/core/utils/themes.dart';
-import 'package:smartgallery/features/Gallery%20Folders/view/widgets/photo_grid_item.dart';
+import 'dart:io';
 
-class FolderPhotosPage extends StatelessWidget {
-  final Map<String, dynamic> folder;
+class PhotoGridItem extends StatelessWidget {
+  final String photoPath;
+  final VoidCallback onTap;
 
-  const FolderPhotosPage({super.key, required this.folder});
+  const PhotoGridItem({
+    super.key,
+    required this.photoPath,
+    required this.onTap,
+  });
 
-  void _addPhoto() {
-    print('Add photo to ${folder['name']}');
+  // Helper method to determine the type of image path
+  bool _isNetworkImage(String path) {
+    return path.startsWith('http://') || path.startsWith('https://');
   }
 
-  void _showPhoto(int index) {
-    print('Show photo ${index + 1}');
+  bool _isAssetImage(String path) {
+    return path.startsWith('assets/');
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final List<String> photos = List.generate(
-      folder['photoCount'],
-      (index) => 'assets/images/photo_${index + 1}.jpg',
-    );
+  bool _isFileImage(String path) {
+    return path.startsWith('/') &&
+        !path.startsWith('/static/') &&
+        !path.startsWith('/assets/');
+  }
 
-    return Scaffold(
-      backgroundColor: Themes.secondary,
-      appBar: AppBar(
-        backgroundColor: Themes.customWhite,
-        elevation: 2,
-        shadowColor: Themes.customBlack.withOpacity(0.1),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Themes.primary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              folder['name'],
-              style: TextStyle(
-                color: Themes.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+  // Helper method to build the image widget with proper error handling
+  Widget _buildImage() {
+    if (_isNetworkImage(photoPath)) {
+      return Image.network(
+        photoPath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading network image: $error');
+          return _buildErrorPlaceholder();
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) {
+            return child;
+          }
+          return Center(
+            child: CircularProgressIndicator(
+              value:
+                  loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Themes.primary),
             ),
+          );
+        },
+      );
+    } else if (_isAssetImage(photoPath)) {
+      return Image.asset(
+        photoPath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading asset image: $error');
+          return _buildErrorPlaceholder();
+        },
+      );
+    } else if (_isFileImage(photoPath)) {
+      return Image.file(
+        File(photoPath),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading file image: $error');
+          return _buildErrorPlaceholder();
+        },
+      );
+    } else {
+      // For any invalid or unrecognized path, try as asset first, then show error
+      return Image.asset(
+        photoPath.startsWith('assets/') ? photoPath : 'assets/$photoPath',
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading image with path: $photoPath');
+          return _buildErrorPlaceholder();
+        },
+      );
+    }
+  }
+
+  Widget _buildErrorPlaceholder() {
+    return Container(
+      color: Themes.accent.withOpacity(0.1),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.broken_image, color: Themes.accent, size: 32),
+            const SizedBox(height: 4),
             Text(
-              '${folder['photoCount']} photos',
+              'No Image',
               style: TextStyle(
-                color: Themes.dark.withOpacity(0.6),
-                fontSize: 12,
+                color: Themes.accent,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            onPressed: _addPhoto,
-            icon: Icon(Icons.add_a_photo, color: Themes.primary),
-          ),
-        ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 1,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            itemCount: photos.length,
-            itemBuilder: (context, index) {
-              return PhotoGridItem(
-                photoPath: photos[index],
-                onTap: () => _showPhoto(index),
-              );
-            },
-          ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: _buildImage(),
         ),
       ),
     );
