@@ -8,15 +8,14 @@ import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_fol
 class GalleryHeader extends StatefulWidget {
   final int foldersCount;
   final VoidCallback onUpdateInterests;
-  final Function(List<String>)?
-  onPhotosAdded; // Changed to support multiple photos
+  final Function()? onPhotosUploaded; // Changed to simple callback
   final int userId;
 
   const GalleryHeader({
     super.key,
     required this.foldersCount,
     required this.onUpdateInterests,
-    this.onPhotosAdded,
+    this.onPhotosUploaded,
     required this.userId,
   });
 
@@ -77,20 +76,17 @@ class _GalleryHeaderState extends State<GalleryHeader> {
       if (pickedFiles.isNotEmpty) {
         final imagePaths = pickedFiles.map((file) => file.path).toList();
 
-        // Upload images using the cubit
+        // Upload images directly to backend
         context.read<GalleryFolderCubit>().uploadImages(
           imagePaths: imagePaths,
           userId: widget.userId.toString(),
         );
 
-        // Notify parent widget about the added photos
-        if (widget.onPhotosAdded != null) {
-          widget.onPhotosAdded!(imagePaths);
-        }
+        print('Uploading ${imagePaths.length} images to backend...');
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Error adding photos: ${e.toString()}');
+        _showErrorSnackBar('Error selecting photos: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -230,6 +226,11 @@ class _GalleryHeaderState extends State<GalleryHeader> {
             _isLoading = false;
           });
           _showSuccessSnackBar(state.message);
+
+          // Notify parent that photos were uploaded successfully
+          if (widget.onPhotosUploaded != null) {
+            widget.onPhotosUploaded!();
+          }
         } else if (state is FailureGalleryFolderState) {
           setState(() {
             _isLoading = false;
@@ -345,14 +346,14 @@ class _GalleryHeaderState extends State<GalleryHeader> {
                             ),
                           )
                           : ElevatedButton.icon(
-                            onPressed: _addPhotos, // Updated method name
+                            onPressed: _addPhotos,
                             icon: Icon(
                               Icons.add_photo_alternate,
                               size: 16,
                               color: Themes.customWhite,
                             ),
                             label: Text(
-                              'Add Photos', // Updated label
+                              'Add Photos',
                               style: TextStyle(color: Themes.customWhite),
                             ),
                             style: ElevatedButton.styleFrom(

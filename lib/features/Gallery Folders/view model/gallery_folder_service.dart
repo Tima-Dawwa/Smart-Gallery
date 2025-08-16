@@ -200,7 +200,8 @@ class GalleryFolderService {
         );
       }
 
-      formData.fields.add(MapEntry('userName', userId));
+      // FIXED: Changed from 'userName' to 'userid' to match backend expectation
+      formData.fields.add(MapEntry('userid', userId));
 
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/media/upload-images',
