@@ -15,25 +15,31 @@ class GalleryFolderService {
     required String newName,
   }) async {
     try {
-      // Debug print to check the parameters
       print('Updating folder - ID: $folderId, Name: $newName');
 
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/folder/update_folderName',
-        body: {'folder_id': folderId, 'new_name': newName},
+        body: {'folder_id': folderId.toString(), 'new_name': newName.trim()},
       );
 
       print('Update name response: $response');
 
-      if (response.containsKey('message') || response.containsKey('success')) {
+      if (response.containsKey('message') ||
+          response.containsKey('success') ||
+          (response.containsKey('success') && response['success'] == true)) {
         return right(response['message'] ?? 'Folder name updated successfully');
       } else {
-        return left(Failure(errMessage: 'Failed To Update Folder Name'));
+        return left(
+          Failure(
+            errMessage: response['error'] ?? 'Failed To Update Folder Name',
+          ),
+        );
       }
     } catch (e) {
       print('Error in updateNameFolder: $e');
       if (e is DioException) {
         print('DioException details: ${e.response?.data}');
+        print('DioException status code: ${e.response?.statusCode}');
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -50,27 +56,34 @@ class GalleryFolderService {
     required String newPassword,
   }) async {
     try {
-      // Debug print to check the parameters
       print('Updating folder password - ID: $folderId, Password: $newPassword');
 
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/folder/updateFolderPassword',
-        body: {'folder_id': folderId, 'new_password': newPassword},
+        body: {'folder_id': folderId.toString(), 'new_password': newPassword},
       );
 
       print('Update password response: $response');
 
-      if (response.containsKey('message') || response.containsKey('success')) {
+      // Check for success in multiple ways
+      if (response.containsKey('message') ||
+          response.containsKey('success') ||
+          (response.containsKey('success') && response['success'] == true)) {
         return right(
           response['message'] ?? 'Folder password updated successfully',
         );
       } else {
-        return left(Failure(errMessage: 'Failed To Update Folder Password'));
+        return left(
+          Failure(
+            errMessage: response['error'] ?? 'Failed To Update Folder Password',
+          ),
+        );
       }
     } catch (e) {
       print('Error in updateFolderPassword: $e');
       if (e is DioException) {
         print('DioException details: ${e.response?.data}');
+        print('DioException status code: ${e.response?.statusCode}');
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -92,15 +105,24 @@ class GalleryFolderService {
 
       Map<String, dynamic> response = await api.delete(
         endPoint: '/api/folder/deleteFolder',
-        body: {'folder_name': folderName, 'user_id': userId},
+        body: {
+          'folder_name': folderName.trim(),
+          'user_id':
+              userId
+                  .toString(), // Ensure it's sent as string if backend expects string
+        },
       );
 
       print('Delete folder response: $response');
 
-      if (response.containsKey('message') || response.containsKey('success')) {
+      if (response.containsKey('message') ||
+          response.containsKey('success') ||
+          (response.containsKey('success') && response['success'] == true)) {
         return right(response['message'] ?? 'Folder deleted successfully');
       } else {
-        return left(Failure(errMessage: 'Failed To Delete Folder'));
+        return left(
+          Failure(errMessage: response['error'] ?? 'Failed To Delete Folder'),
+        );
       }
     } catch (e) {
       print('Error in deleteFolder: $e');
@@ -141,7 +163,11 @@ class GalleryFolderService {
 
         return right(mediaList);
       } else {
-        return left(Failure(errMessage: 'Failed To Get Folder Media'));
+        return left(
+          Failure(
+            errMessage: response['error'] ?? 'Failed To Get Folder Media',
+          ),
+        );
       }
     } catch (e) {
       print('Error in getFolderMedia: $e');
@@ -183,10 +209,14 @@ class GalleryFolderService {
 
       print('Upload images response: $response');
 
-      if (response.containsKey('message') || response.containsKey('success')) {
+      if (response.containsKey('message') ||
+          response.containsKey('success') ||
+          (response.containsKey('success') && response['success'] == true)) {
         return right(response['message'] ?? 'Images uploaded successfully');
       } else {
-        return left(Failure(errMessage: 'Failed To Upload Images'));
+        return left(
+          Failure(errMessage: response['error'] ?? 'Failed To Upload Images'),
+        );
       }
     } catch (e) {
       print('Error in uploadImages: $e');
@@ -233,7 +263,9 @@ class GalleryFolderService {
 
         return right(folders);
       } else {
-        return left(Failure(errMessage: 'Failed To Get All Folders'));
+        return left(
+          Failure(errMessage: response['error'] ?? 'Failed To Get All Folders'),
+        );
       }
     } catch (e) {
       print('Error in getAllFolders: $e');

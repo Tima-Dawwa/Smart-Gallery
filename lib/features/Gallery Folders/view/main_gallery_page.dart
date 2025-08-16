@@ -82,7 +82,7 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
     );
   }
 
- void _updateFolder(Map<String, dynamic> updatedFolder) {
+  void _updateFolder(Map<String, dynamic> updatedFolder) {
     // Update local state immediately for better UX
     setState(() {
       final index = _folders.indexWhere(
@@ -123,9 +123,18 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
     );
   }
 
-  void _onPhotoAdded(String photoPath) {
-    print('Photo added to gallery: $photoPath');
-    _showFolderSelectionDialog(photoPath);
+  // Updated method name to handle multiple photos
+  void _onPhotosAdded(List<String> photoPaths) {
+    print('Photos added to gallery: $photoPaths');
+    if (photoPaths.isNotEmpty) {
+      // If only one photo, show folder selection dialog
+      if (photoPaths.length == 1) {
+        _showFolderSelectionDialog(photoPaths.first);
+      } else {
+        // For multiple photos, show batch folder selection
+        _showBatchFolderSelectionDialog(photoPaths);
+      }
+    }
   }
 
   void _showFolderSelectionDialog(String photoPath) {
@@ -218,6 +227,99 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
     );
   }
 
+  // New method to handle multiple photos at once
+  void _showBatchFolderSelectionDialog(List<String> photoPaths) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.folder_open, color: Themes.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Select Folder for ${photoPaths.length} Photos',
+                  style: TextStyle(
+                    color: Themes.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _folders.length,
+              itemBuilder: (context, index) {
+                final folder = _folders[index];
+                return ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: AssetImage(
+                          folder['coverImage'] ?? 'assets/travel.jpeg',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child:
+                        folder['isLocked']
+                            ? Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.lock,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            )
+                            : null,
+                  ),
+                  title: Text(folder['name']),
+                  subtitle: Text('${folder['photoCount']} photos'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _addPhotosToFolder(photoPaths, folder);
+                  },
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel', style: TextStyle(color: Themes.accent)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _createNewFolderWithPhotos(photoPaths);
+              },
+              child: Text(
+                'New Folder',
+                style: TextStyle(color: Themes.primary),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _addPhotoToFolder(String photoPath, Map<String, dynamic> folder) {
     // Upload image using Cubit
     context.read<GalleryFolderCubit>().uploadImages(
@@ -231,6 +333,27 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
       if (index != -1) {
         _folders[index]['photoCount'] =
             (_folders[index]['photoCount'] ?? 0) + 1;
+      }
+    });
+  }
+
+  // New method to handle multiple photos
+  void _addPhotosToFolder(
+    List<String> photoPaths,
+    Map<String, dynamic> folder,
+  ) {
+    // Upload images using Cubit
+    context.read<GalleryFolderCubit>().uploadImages(
+      imagePaths: photoPaths,
+      userId: widget.userId.toString(),
+    );
+
+    // Update local state
+    setState(() {
+      final index = _folders.indexWhere((f) => f['id'] == folder['id']);
+      if (index != -1) {
+        _folders[index]['photoCount'] =
+            (_folders[index]['photoCount'] ?? 0) + photoPaths.length;
       }
     });
   }
@@ -283,6 +406,84 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
                     'id': DateTime.now().millisecondsSinceEpoch.toString(),
                     'name': nameController.text.trim(),
                     'photoCount': 1,
+                    'coverImage': 'assets/travel.jpeg',
+                    'isLocked': false,
+                    'password': null,
+                  };
+
+                  setState(() {
+                    _folders.add(newFolder);
+                  });
+
+                  Navigator.of(context).pop();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Themes.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Create',
+                style: TextStyle(color: Themes.customWhite),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // New method to create folder with multiple photos
+  void _createNewFolderWithPhotos(List<String> photoPaths) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final nameController = TextEditingController();
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Create New Folder for ${photoPaths.length} Photos',
+            style: TextStyle(
+              color: Themes.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: TextField(
+            controller: nameController,
+            decoration: InputDecoration(
+              hintText: 'Enter folder name',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Themes.primary, width: 2),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel', style: TextStyle(color: Themes.accent)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  // Upload all images
+                  context.read<GalleryFolderCubit>().uploadImages(
+                    imagePaths: photoPaths,
+                    userId: widget.userId.toString(),
+                  );
+
+                  // Create new folder locally (in real app, this would be handled by backend)
+                  final newFolder = {
+                    'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                    'name': nameController.text.trim(),
+                    'photoCount': photoPaths.length,
                     'coverImage': 'assets/travel.jpeg',
                     'isLocked': false,
                     'password': null,
@@ -393,7 +594,8 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
                         child: GalleryHeader(
                           foldersCount: _folders.length,
                           onUpdateInterests: _navigateToUpdateInterests,
-                          onPhotoAdded: _onPhotoAdded,
+                          onPhotosAdded:
+                              _onPhotosAdded, // Updated parameter name
                           userId: widget.userId,
                         ),
                       ),

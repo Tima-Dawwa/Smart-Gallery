@@ -52,6 +52,45 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
     super.dispose();
   }
 
+  // Fixed method to get folder ID
+  int? _getFolderId() {
+    final folderIdValue = widget.folder['id'];
+
+    print(
+      'Raw folder ID value: $folderIdValue (type: ${folderIdValue.runtimeType})',
+    );
+
+    if (folderIdValue == null) {
+      print('Folder ID is null');
+      return null;
+    }
+
+    int? folderId;
+
+    if (folderIdValue is int) {
+      folderId = folderIdValue;
+    } else if (folderIdValue is String) {
+      folderId = int.tryParse(folderIdValue);
+      if (folderId == null) {
+        print('Failed to parse folder ID string: "$folderIdValue"');
+        return null;
+      }
+    } else {
+      print(
+        'Folder ID is neither int nor string: ${folderIdValue.runtimeType}',
+      );
+      return null;
+    }
+
+    if (folderId <= 0) {
+      print('Invalid folder ID value: $folderId');
+      return null;
+    }
+
+    print('Successfully parsed folder ID: $folderId');
+    return folderId;
+  }
+
   void _validateAndSave() async {
     setState(() {
       _nameError = null;
@@ -94,31 +133,30 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       _isProcessing = true;
     });
 
-    // Get folder ID properly - handle both string and int cases
-    int folderId = 0;
-    final folderIdValue = widget.folder['id'];
+    // Get folder ID using the fixed method
+    final folderId = _getFolderId();
 
-    if (folderIdValue is int) {
-      folderId = folderIdValue;
-    } else if (folderIdValue is String) {
-      folderId = int.tryParse(folderIdValue) ?? 0;
-    }
-
-    print('Processing folder with ID: $folderId');
-    print('Original folder data: ${widget.folder}');
-
-    if (folderId == 0) {
+    if (folderId == null) {
       setState(() {
         _isProcessing = false;
       });
+
+      // Show error with more details
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Invalid folder ID'),
+          content: Text(
+            'Invalid folder ID. Please try refreshing the folder list.',
+            style: TextStyle(color: Themes.customWhite),
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
+
+    print('Processing folder with ID: $folderId');
+    print('Original folder data: ${widget.folder}');
 
     try {
       bool hasUpdates = false;
@@ -128,6 +166,7 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         print(
           'Updating folder name from "${widget.folder['name']}" to "${_nameController.text.trim()}"',
         );
+
         await context.read<GalleryFolderCubit>().updateNameFolder(
           folderId: folderId,
           newName: _nameController.text.trim(),
@@ -139,6 +178,7 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       if (_isLocked &&
           _passwordController.text != (widget.folder['password'] ?? '')) {
         print('Updating folder password');
+
         await context.read<GalleryFolderCubit>().updateFolderPassword(
           folderId: folderId,
           newPassword: _passwordController.text,
@@ -172,8 +212,12 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error updating folder: $e'),
+            content: Text(
+              'Error updating folder: $e',
+              style: TextStyle(color: Themes.customWhite),
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -275,13 +319,10 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           constraints: BoxConstraints(
-            maxHeight:
-                MediaQuery.of(context).size.height *
-                0.85, // Limit height to prevent overflow
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
             maxWidth: MediaQuery.of(context).size.width * 0.9,
           ),
           child: SingleChildScrollView(
-            // Add scrolling to prevent overflow
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -293,7 +334,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                       Icon(Icons.settings, color: Themes.primary, size: 24),
                       const SizedBox(width: 8),
                       Expanded(
-                        // Wrap with Expanded to prevent overflow
                         child: Text(
                           'Folder Settings',
                           style: TextStyle(
@@ -310,6 +350,30 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                     ],
                   ),
                   const SizedBox(height: 20),
+
+                  // Debug info (remove in production)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Debug Info:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Folder ID: ${widget.folder['id']} (${widget.folder['id'].runtimeType})',
+                        ),
+                        Text('Parsed ID: ${_getFolderId()}'),
+                        Text('All folder data: ${widget.folder}'),
+                      ],
+                    ),
+                  ),
 
                   // Folder Name Field
                   Text(
@@ -565,7 +629,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                     ],
                   ),
 
-                  // Add some bottom padding to ensure content is visible
                   const SizedBox(height: 8),
                 ],
               ),
