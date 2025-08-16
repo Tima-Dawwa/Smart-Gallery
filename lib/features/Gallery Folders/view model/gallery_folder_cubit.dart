@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartgallery/features/Gallery%20Folders/model/media.dart';
-import 'package:smartgallery/features/Gallery%20Folders/model/folders.dart';
 import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_service.dart';
 import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_states.dart';
 

@@ -16,25 +16,43 @@ class Folder {
   });
 
   factory Folder.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely parse integers
+    int parseIntValue(dynamic value, int defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is String) {
+        final parsed = int.tryParse(value);
+        return parsed ?? defaultValue;
+      }
+      return defaultValue;
+    }
+
     return Folder(
-      folderName: json['folder_name'] ?? json['folderName'] ?? '',
-      hasPassword: json['has_password'] ?? json['hasPassword'] ?? 0,
-      idFolder: json['id_folder'] ?? json['idFolder'] ?? json['id'] ?? 0,
+      folderName: json['folderName'] ?? json['folder_name'] ?? '',
+      hasPassword: parseIntValue(
+        json['has_password'] ?? json['hasPassword'],
+        0,
+      ),
+      // FIXED: Check for 'idfolder' first (matches API response)
+      idFolder: parseIntValue(
+        json['idfolder'] ?? json['id_folder'] ?? json['idFolder'] ?? json['id'],
+        0,
+      ),
       image:
           json['image'] ??
           json['cover_image'] ??
           json['coverImage'] ??
           'assets/travel.jpeg',
-      password: json['password'],
-      photoCount: json['photo_count'] ?? json['photoCount'] ?? 0,
+      password: json['password']?.toString(), // Ensure it's a string
+      photoCount: parseIntValue(json['photo_count'] ?? json['photoCount'], 0),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'folder_name': folderName,
+      'folderName': folderName,
       'has_password': hasPassword,
-      'id_folder': idFolder,
+      'idfolder': idFolder, // Changed to match API format
       'image': image,
       'password': password,
       'photo_count': photoCount,
@@ -50,7 +68,7 @@ class Folder {
   // Convert to Map format used by UI components
   Map<String, dynamic> toUIMap() {
     return {
-      'id': idFolder.toString(),
+      'id': idFolder, // Keep as int instead of converting to string
       'name': folderName,
       'photoCount': photoCount ?? 0,
       'coverImage': image,
@@ -61,13 +79,24 @@ class Folder {
 
   // Create Folder from UI Map format
   factory Folder.fromUIMap(Map<String, dynamic> uiMap) {
+    // Helper function to safely parse integers
+    int parseIntValue(dynamic value, int defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is String) {
+        final parsed = int.tryParse(value);
+        return parsed ?? defaultValue;
+      }
+      return defaultValue;
+    }
+
     return Folder(
       folderName: uiMap['name'] ?? '',
       hasPassword: (uiMap['isLocked'] ?? false) ? 1 : 0,
-      idFolder: int.tryParse(uiMap['id'].toString()) ?? 0,
+      idFolder: parseIntValue(uiMap['id'], 0),
       image: uiMap['coverImage'] ?? 'assets/travel.jpeg',
-      password: uiMap['password'],
-      photoCount: uiMap['photoCount'] ?? 0,
+      password: uiMap['password']?.toString(), // Ensure it's a string
+      photoCount: parseIntValue(uiMap['photoCount'], 0),
     );
   }
 
@@ -88,5 +117,10 @@ class Folder {
       password: password ?? this.password,
       photoCount: photoCount ?? this.photoCount,
     );
+  }
+
+  @override
+  String toString() {
+    return 'Folder{folderName: $folderName, hasPassword: $hasPassword, idFolder: $idFolder, image: $image, password: $password, photoCount: $photoCount}';
   }
 }
