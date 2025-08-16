@@ -15,6 +15,39 @@ class Folder {
     this.photoCount = 0,
   });
 
+  // Helper method to validate and fix image URLs
+  static String _validateImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return 'assets/travel.jpeg'; // Default fallback
+    }
+
+    // If it's a relative path that starts with /static/ or /assets/
+    if (imageUrl.startsWith('/static/') || imageUrl.startsWith('/assets/')) {
+      // Convert to proper asset path
+      String assetPath = imageUrl.replaceFirst(RegExp(r'^/'), '');
+
+      // If it's a static path, convert to assets
+      if (assetPath.startsWith('static/images/')) {
+        assetPath = assetPath.replaceFirst('static/images/', 'assets/');
+      }
+
+      return assetPath;
+    }
+
+    // If it's already a proper asset path
+    if (imageUrl.startsWith('assets/')) {
+      return imageUrl;
+    }
+
+    // If it's a proper network URL
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+
+    // For any other case, treat as asset
+    return imageUrl.startsWith('assets/') ? imageUrl : 'assets/$imageUrl';
+  }
+
   factory Folder.fromJson(Map<String, dynamic> json) {
     // Helper function to safely parse integers
     int parseIntValue(dynamic value, int defaultValue) {
@@ -38,11 +71,10 @@ class Folder {
         json['idfolder'] ?? json['id_folder'] ?? json['idFolder'] ?? json['id'],
         0,
       ),
-      image:
-          json['image'] ??
-          json['cover_image'] ??
-          json['coverImage'] ??
-          'assets/travel.jpeg',
+      // Use the helper method to validate image URLs
+      image: _validateImageUrl(
+        json['image'] ?? json['cover_image'] ?? json['coverImage'],
+      ),
       password: json['password']?.toString(), // Ensure it's a string
       photoCount: parseIntValue(json['photo_count'] ?? json['photoCount'], 0),
     );
@@ -94,7 +126,7 @@ class Folder {
       folderName: uiMap['name'] ?? '',
       hasPassword: (uiMap['isLocked'] ?? false) ? 1 : 0,
       idFolder: parseIntValue(uiMap['id'], 0),
-      image: uiMap['coverImage'] ?? 'assets/travel.jpeg',
+      image: _validateImageUrl(uiMap['coverImage']),
       password: uiMap['password']?.toString(), // Ensure it's a string
       photoCount: parseIntValue(uiMap['photoCount'], 0),
     );
@@ -113,7 +145,7 @@ class Folder {
       folderName: folderName ?? this.folderName,
       hasPassword: hasPassword ?? this.hasPassword,
       idFolder: idFolder ?? this.idFolder,
-      image: image ?? this.image,
+      image: image != null ? _validateImageUrl(image) : this.image,
       password: password ?? this.password,
       photoCount: photoCount ?? this.photoCount,
     );

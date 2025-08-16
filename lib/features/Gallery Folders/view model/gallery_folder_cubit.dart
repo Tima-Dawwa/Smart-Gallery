@@ -154,4 +154,50 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
       await getFolderMedia(folderId: folderId);
     }
   }
+
+  // Add this method to your GalleryFolderCubit class
+
+  Future<void> updateAudio({
+    required int imageId,
+    required String audioPath,
+  }) async {
+    emit(LoadingUpdateAudioState());
+
+    var response = await galleryFolderService.updateAudio(
+      imageId: imageId,
+      audioPath: audioPath,
+    );
+
+    response.fold(
+      (failure) {
+        emit(FailureGalleryFolderState(failure: failure));
+      },
+      (message) {
+        print('Audio updated successfully: $message');
+        emit(SuccessGalleryFolderState(message: message));
+      },
+    );
+  }
+
+  Future<void> updateImage({
+    required int imageId,
+    required String imagePath,
+  }) async {
+    emit(LoadingUpdateImageState());
+
+    var response = await galleryFolderService.updateImage(
+      imageId: imageId,
+      imagePath: imagePath,
+    );
+
+    response.fold(
+      (failure) {
+        emit(FailureGalleryFolderState(failure: failure));
+      },
+      (message) {
+        print('Image updated successfully: $message');
+        emit(SuccessGalleryFolderState(message: message));
+      },
+    );
+  }
 }

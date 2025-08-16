@@ -14,6 +14,91 @@ class FolderCard extends StatelessWidget {
     this.onSettings,
   });
 
+  // Helper method to determine if the image is a network URL or asset
+  bool _isNetworkImage(String imagePath) {
+    return imagePath.startsWith('https://65431784b11d.ngrok-free.app') || imagePath.startsWith('https://65431784b11d.ngrok-free.app');
+  }
+
+  // Helper method to get the correct image provider
+  ImageProvider _getImageProvider(String imagePath) {
+    if (_isNetworkImage(imagePath)) {
+      return NetworkImage(imagePath);
+    } else {
+      // For local assets or invalid URLs, use AssetImage
+      return AssetImage(imagePath);
+    }
+  }
+
+  // Helper method to build image with error handling
+  Widget _buildCoverImage() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        color: Colors.grey[300], // Fallback background color
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        child:
+            _isNetworkImage(folder.coverImage)
+                ? Image.network(
+                  folder.coverImage,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading network image: $error');
+                    return _buildFallbackImage();
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      return child;
+                    }
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Themes.primary,
+                        ),
+                      ),
+                    );
+                  },
+                )
+                : Image.asset(
+                  folder.coverImage,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading asset image: $error');
+                    return _buildFallbackImage();
+                  },
+                ),
+      ),
+    );
+  }
+
+  // Fallback image when loading fails
+  Widget _buildFallbackImage() {
+    return Container(
+      height: 120,
+      color: Themes.accent.withOpacity(0.1),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.broken_image, color: Themes.accent, size: 32),
+            const SizedBox(height: 4),
+            Text(
+              'No Image',
+              style: TextStyle(color: Themes.accent, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -35,86 +120,78 @@ class FolderCard extends StatelessWidget {
           children: [
             Expanded(
               flex: 3,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                  image: DecorationImage(
-                    image: NetworkImage(folder.coverImage),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    if (folder.isLocked)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Themes.customBlack.withOpacity(0.6),
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.lock,
-                            color: Themes.customWhite,
-                            size: 32,
-                          ),
+              child: Stack(
+                children: [
+                  // Cover Image
+                  _buildCoverImage(),
+
+                  // Lock overlay
+                  if (folder.isLocked)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Themes.customBlack.withOpacity(0.6),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
                         ),
                       ),
-
-                    // Settings Button
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (onSettings != null) {
-                            onSettings!();
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Themes.customBlack.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.settings,
-                            color: Themes.customWhite,
-                            size: 16,
-                          ),
+                      child: Center(
+                        child: Icon(
+                          Icons.lock,
+                          color: Themes.customWhite,
+                          size: 32,
                         ),
                       ),
                     ),
 
-                    // Photo Count
-                    Positioned(
-                      top: 8,
-                      right: 8,
+                  // Settings Button
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (onSettings != null) {
+                          onSettings!();
+                        }
+                      },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Themes.customBlack.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          '${folder.photoCount ?? 0}',
-                          style: TextStyle(
-                            color: Themes.customWhite,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Icon(
+                          Icons.settings,
+                          color: Themes.customWhite,
+                          size: 16,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Photo Count
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Themes.customBlack.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${folder.photoCount ?? 0}',
+                        style: TextStyle(
+                          color: Themes.customWhite,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
