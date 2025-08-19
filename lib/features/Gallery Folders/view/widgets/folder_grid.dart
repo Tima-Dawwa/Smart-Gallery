@@ -13,7 +13,7 @@ class PhotoGridItem extends StatelessWidget {
   });
 
   bool _isNetworkImage(String path) {
-    return path.startsWith('http://') || path.startsWith('https://');
+    return path.startsWith('https://518f08bdc897.ngrok-free.app') || path.startsWith('https://518f08bdc897.ngrok-free.app');
   }
 
   bool _isAssetImage(String path) {
