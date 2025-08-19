@@ -14,22 +14,6 @@ class FolderCard extends StatelessWidget {
     this.onSettings,
   });
 
-  // Helper method to determine if the image is a network URL or asset
-  bool _isNetworkImage(String imagePath) {
-    return imagePath.startsWith('https://65431784b11d.ngrok-free.app') || imagePath.startsWith('https://65431784b11d.ngrok-free.app');
-  }
-
-  // Helper method to get the correct image provider
-  ImageProvider _getImageProvider(String imagePath) {
-    if (_isNetworkImage(imagePath)) {
-      return NetworkImage(imagePath);
-    } else {
-      // For local assets or invalid URLs, use AssetImage
-      return AssetImage(imagePath);
-    }
-  }
-
-  // Helper method to build image with error handling
   Widget _buildCoverImage() {
     return Container(
       width: double.infinity,
@@ -39,41 +23,30 @@ class FolderCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        child:
-            _isNetworkImage(folder.coverImage)
-                ? Image.network(
-                  folder.coverImage,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    print('Error loading network image: $error');
-                    return _buildFallbackImage();
-                  },
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) {
-                      return child;
-                    }
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value:
-                            loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Themes.primary,
-                        ),
-                      ),
-                    );
-                  },
-                )
-                : Image.asset(
-                  folder.coverImage,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    print('Error loading asset image: $error');
-                    return _buildFallbackImage();
-                  },
-                ),
+        child: Image.network(
+          "https://518f08bdc897.ngrok-free.app${folder.coverImage}",
+          headers: {"ngrok-skip-browser-warning": "true"},
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading network image: $error');
+            return _buildFallbackImage();
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return Center(
+              child: CircularProgressIndicator(
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                valueColor: AlwaysStoppedAnimation<Color>(Themes.primary),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
