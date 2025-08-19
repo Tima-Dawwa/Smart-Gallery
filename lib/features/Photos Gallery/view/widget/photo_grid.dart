@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:smartgallery/core/utils/themes.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/media.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/photo_gallery_view.dart';
 
 class PhotoGrid extends StatefulWidget {
@@ -10,17 +11,21 @@ class PhotoGrid extends StatefulWidget {
   final double crossAxisSpacing;
   final double mainAxisSpacing;
   final double borderRadius;
+  final int folderid;
+  final List<Media>mediaList;
   final Function(List<String>)? onPhotoUrlsUpdated;
 
   const PhotoGrid({
     super.key,
     required this.photoUrls,
     required this.folderName,
+    required this.folderid,
     this.crossAxisCount = 3,
     this.crossAxisSpacing = 4,
     this.mainAxisSpacing = 4,
     this.borderRadius = 8,
     this.onPhotoUrlsUpdated,
+    required this.mediaList,
   });
 
   @override
@@ -48,17 +53,7 @@ class _PhotoGridState extends State<PhotoGrid> {
     debugPrint('Photo cropped and grid updated at index $index: $croppedPath');
   }
 
-  void _handlePhotoDeleted(int index) {
-    setState(() {
-      _photoUrls.removeAt(index);
-    });
-
-    if (widget.onPhotoUrlsUpdated != null) {
-      widget.onPhotoUrlsUpdated!(_photoUrls);
-    }
-
-    debugPrint('Photo deleted from grid at index $index');
-  }
+  void _handlePhotoDeleted(int index) {}
 
   @override
   Widget build(BuildContext context) {
@@ -201,11 +196,12 @@ class _PhotoGridState extends State<PhotoGrid> {
       MaterialPageRoute(
         builder:
             (context) => PhotoGalleryView(
-              photoUrls: _photoUrls,
+              photoUrls: widget.photoUrls,
               initialIndex: index,
               folderName: widget.folderName,
               onPhotoCropped: _handlePhotoCropped,
               onPhotoDeleted: _handlePhotoDeleted,
+              listmedia: widget.mediaList,
             ),
       ),
     );

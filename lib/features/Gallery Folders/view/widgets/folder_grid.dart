@@ -12,7 +12,6 @@ class PhotoGridItem extends StatelessWidget {
     required this.onTap,
   });
 
-  // Helper method to determine the type of image path
   bool _isNetworkImage(String path) {
     return path.startsWith('http://') || path.startsWith('https://');
   }
