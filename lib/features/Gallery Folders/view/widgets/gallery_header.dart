@@ -8,7 +8,7 @@ import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_fol
 class GalleryHeader extends StatefulWidget {
   final int foldersCount;
   final VoidCallback onUpdateInterests;
-  final Function()? onPhotosUploaded; // Changed to simple callback
+  final Function()? onPhotosUploaded; 
   final int userId;
 
   const GalleryHeader({
@@ -76,7 +76,6 @@ class _GalleryHeaderState extends State<GalleryHeader> {
       if (pickedFiles.isNotEmpty) {
         final imagePaths = pickedFiles.map((file) => file.path).toList();
 
-        // Upload images directly to backend
         context.read<GalleryFolderCubit>().uploadImages(
           imagePaths: imagePaths,
           userId: widget.userId.toString(),
@@ -227,7 +226,6 @@ class _GalleryHeaderState extends State<GalleryHeader> {
           });
           _showSuccessSnackBar(state.message);
 
-          // Notify parent that photos were uploaded successfully
           if (widget.onPhotosUploaded != null) {
             widget.onPhotosUploaded!();
           }

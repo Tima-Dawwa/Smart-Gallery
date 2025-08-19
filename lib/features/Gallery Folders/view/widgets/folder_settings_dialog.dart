@@ -52,16 +52,10 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
     super.dispose();
   }
 
-  // Fixed method to get folder ID
   int? _getFolderId() {
     final folderIdValue = widget.folder['id'];
 
-    print(
-      'Raw folder ID value: $folderIdValue (type: ${folderIdValue.runtimeType})',
-    );
-
     if (folderIdValue == null) {
-      print('Folder ID is null');
       return null;
     }
 
@@ -76,18 +70,13 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         return null;
       }
     } else {
-      print(
-        'Folder ID is neither int nor string: ${folderIdValue.runtimeType}',
-      );
       return null;
     }
 
     if (folderId <= 0) {
-      print('Invalid folder ID value: $folderId');
       return null;
     }
 
-    print('Successfully parsed folder ID: $folderId');
     return folderId;
   }
 
@@ -97,7 +86,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       _passwordError = null;
     });
 
-    // Validate folder name
     if (_nameController.text.trim().isEmpty) {
       setState(() {
         _nameError = 'Folder name cannot be empty';
@@ -105,7 +93,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       return;
     }
 
-    // Validate password if folder is locked
     if (_isLocked) {
       if (_passwordController.text.isEmpty) {
         setState(() {
@@ -133,7 +120,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       _isProcessing = true;
     });
 
-    // Get folder ID using the fixed method
     final folderId = _getFolderId();
 
     if (folderId == null) {
@@ -141,7 +127,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         _isProcessing = false;
       });
 
-      // Show error with more details
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -155,18 +140,10 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       return;
     }
 
-    print('Processing folder with ID: $folderId');
-    print('Original folder data: ${widget.folder}');
-
     try {
       bool hasUpdates = false;
 
-      // Update folder name if changed
       if (_nameController.text.trim() != widget.folder['name']) {
-        print(
-          'Updating folder name from "${widget.folder['name']}" to "${_nameController.text.trim()}"',
-        );
-
         await context.read<GalleryFolderCubit>().updateNameFolder(
           folderId: folderId,
           newName: _nameController.text.trim(),
@@ -174,11 +151,8 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         hasUpdates = true;
       }
 
-      // Update folder password if locked and password changed
       if (_isLocked &&
           _passwordController.text != (widget.folder['password'] ?? '')) {
-        print('Updating folder password');
-
         await context.read<GalleryFolderCubit>().updateFolderPassword(
           folderId: folderId,
           newPassword: _passwordController.text,
@@ -186,29 +160,23 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         hasUpdates = true;
       }
 
-      // If no backend updates but lock status changed, still update UI
       if (!hasUpdates && _isLocked != (widget.folder['isLocked'] ?? false)) {
         hasUpdates = true;
       }
 
       if (hasUpdates) {
-        // Create updated folder and notify parent
         final updatedFolder = Map<String, dynamic>.from(widget.folder);
         updatedFolder['name'] = _nameController.text.trim();
         updatedFolder['isLocked'] = _isLocked;
         updatedFolder['password'] = _isLocked ? _passwordController.text : null;
 
         widget.onFolderUpdated(updatedFolder);
-
-        print('Folder updated successfully');
       }
 
-      // Close dialog after successful update
       if (mounted) {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      print('Error updating folder: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -261,8 +229,8 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // Close confirmation dialog
-                  Navigator.of(context).pop(); // Close settings dialog
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
 
                   if (widget.onFolderDeleted != null) {
                     widget.onFolderDeleted!(widget.folder);
@@ -351,31 +319,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Debug info (remove in production)
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Debug Info:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Folder ID: ${widget.folder['id']} (${widget.folder['id'].runtimeType})',
-                        ),
-                        Text('Parsed ID: ${_getFolderId()}'),
-                        Text('All folder data: ${widget.folder}'),
-                      ],
-                    ),
-                  ),
-
-                  // Folder Name Field
                   Text(
                     'Folder Name',
                     style: TextStyle(
@@ -408,7 +351,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Lock Toggle
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
@@ -449,7 +391,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                     ),
                   ),
 
-                  // Password Fields (only show if locked)
                   if (_isLocked) ...[
                     const SizedBox(height: 16),
                     Text(
@@ -550,7 +491,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
 
                   const SizedBox(height: 24),
 
-                  // Delete Button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -572,7 +512,6 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
 
                   const SizedBox(height: 16),
 
-                  // Action Buttons
                   Row(
                     children: [
                       Expanded(

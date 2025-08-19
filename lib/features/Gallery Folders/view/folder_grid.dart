@@ -20,7 +20,6 @@ class _FolderPhotosPageState extends State<FolderPhotosPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize with existing photos (placeholder paths)
     _photos = List.generate(
       widget.folder['photoCount'],
       (index) => 'assets/images/photo_${index + 1}.jpg',
@@ -33,7 +32,6 @@ class _FolderPhotosPageState extends State<FolderPhotosPage> {
         _isLoading = true;
       });
 
-      // Show options dialog
       final source = await _showImageSourceDialog();
       if (source == null) {
         setState(() {
@@ -44,23 +42,17 @@ class _FolderPhotosPageState extends State<FolderPhotosPage> {
 
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
-        imageQuality: 80, // Compress image to 80% quality
+        imageQuality: 80,
         maxWidth: 1920,
         maxHeight: 1080,
       );
 
       if (pickedFile != null) {
-        // Add the selected photo to the list
         setState(() {
           _photos.add(pickedFile.path);
-          // Update the folder's photo count
           widget.folder['photoCount'] = _photos.length;
         });
 
-        // TODO: Send to backend
-        await _sendToBackend(pickedFile);
-
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -80,7 +72,6 @@ class _FolderPhotosPageState extends State<FolderPhotosPage> {
         }
       }
     } catch (e) {
-      // Handle errors
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -156,35 +147,6 @@ class _FolderPhotosPageState extends State<FolderPhotosPage> {
         );
       },
     );
-  }
-
-  Future<void> _sendToBackend(XFile imageFile) async {
-    // TODO: Implement backend API call
-    print('Sending photo to backend: ${imageFile.path}');
-    print('Photo size: ${await imageFile.length()} bytes');
-    print('Folder ID: ${widget.folder['id']}');
-
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Example of what you might do:
-    /*
-    try {
-      var request = http.MultipartRequest('POST', Uri.parse('your-api-endpoint'));
-      request.fields['folderId'] = widget.folder['id'];
-      request.files.add(await http.MultipartFile.fromPath('photo', imageFile.path));
-      
-      var response = await request.send();
-      if (response.statusCode == 200) {
-        print('Photo uploaded successfully');
-      } else {
-        throw Exception('Failed to upload photo');
-      }
-    } catch (e) {
-      print('Upload error: $e');
-      rethrow;
-    }
-    */
   }
 
   void _showPhoto(int index) {

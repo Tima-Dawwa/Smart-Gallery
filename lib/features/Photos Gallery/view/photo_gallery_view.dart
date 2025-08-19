@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smartgallery/core/helpers/image_cropper_handler.dart';
 import 'package:smartgallery/core/helpers/image_share_handler.dart';
 import 'package:smartgallery/core/utils/themes.dart';
+import 'package:smartgallery/features/Gallery%20Folders/model/media.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_fallery_controll.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_galley_widget.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/recording_bottom_sheet.dart';
@@ -15,6 +16,7 @@ class PhotoGalleryView extends StatefulWidget {
   final bool showDeleteButton;
   final bool showCropButton;
   final bool showShareButton;
+  final List<Media> listmedia;
   final Function(int)? onPhotoDeleted;
   final Function(String, int)? onPhotoCropped;
 
@@ -23,6 +25,7 @@ class PhotoGalleryView extends StatefulWidget {
     required this.photoUrls,
     required this.initialIndex,
     required this.folderName,
+    required this.listmedia,
     this.showRecordingButton = true,
     this.showDeleteButton = true,
     this.showCropButton = true,

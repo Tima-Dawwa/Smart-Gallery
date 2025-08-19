@@ -10,6 +10,8 @@ import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_fol
 import 'package:smartgallery/features/Gallery%20Folders/view%20model/gallery_folder_service.dart';
 import 'package:smartgallery/features/My%20Intereset/view%20model/my_interset_cubit.dart';
 import 'package:smartgallery/features/My%20Intereset/view%20model/my_interset_services.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallarey_cubit.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallery_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +39,11 @@ class MyApp extends StatelessWidget {
           create:
               (context) =>
                   GalleryFolderCubit(getIt.get<GalleryFolderService>()),
+        ),
+          BlocProvider(
+          create:
+              (context) =>
+                  PhotoGalleryCubit(getIt.get<PhotoGalleryService>()),
         ),
       ],
       child: MaterialApp(

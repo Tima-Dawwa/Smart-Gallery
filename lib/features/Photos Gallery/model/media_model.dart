@@ -3,7 +3,7 @@ class Media {
   final String? audioBase64;
   final String? imageBase64;
 
-  Media({required this.idMedia, required this.audioBase64,required this.imageBase64});
+  Media({required this.idMedia, this.audioBase64, this.imageBase64});
 
   factory Media.fromJson(Map<String, dynamic> json) {
     return Media(
