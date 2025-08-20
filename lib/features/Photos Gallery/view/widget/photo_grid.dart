@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/features/Gallery%20Folders/model/media.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/photo_gallery_view.dart';
@@ -91,7 +93,7 @@ class _PhotoGridState extends State<PhotoGrid> {
               crossAxisSpacing: widget.crossAxisSpacing,
               mainAxisSpacing: widget.mainAxisSpacing,
             ),
-            itemCount: _photoUrls.length,
+            itemCount: widget.mediaList.length,
             itemBuilder: (context, index) {
               return _buildPhotoTile(context, index);
             },
@@ -120,7 +122,7 @@ class _PhotoGridState extends State<PhotoGrid> {
           borderRadius: BorderRadius.circular(widget.borderRadius),
           child: Stack(
             children: [
-              _buildImageWidget(_photoUrls[index]),
+              _buildImageWidget(index),
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -133,6 +135,19 @@ class _PhotoGridState extends State<PhotoGrid> {
                   ),
                 ),
               ),
+              if (widget.mediaList[index].hasAudio)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Themes.accent.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.mic, color: Themes.customWhite, size: 16),
+                  ),
+                ),
             ],
           ),
         ),
@@ -140,35 +155,63 @@ class _PhotoGridState extends State<PhotoGrid> {
     );
   }
 
-  Widget _buildImageWidget(String imagePath) {
-   
-   if (imagePath.startsWith('static/')) {
-      return Image.network(
-        "https://5fb3f5e0e40e.ngrok-free.app$imagePath",
-        headers: {"ngrok-skip-browser-warning": "true"},
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildErrorWidget();
-        },
-      );
+  Widget _buildImageWidget(int index) {
+    final Media media = widget.mediaList[index];
+
+    if (media.hasImage && media.imageBase64 != null) {
+      try {
+        String base64String = media.imageBase64!;
+        if (base64String.contains(',')) {
+          base64String = base64String.split(',').last;
+        }
+
+        Uint8List imageBytes = base64Decode(base64String);
+
+        return Image.memory(
+          imageBytes,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('Error loading base64 image: $error');
+            return _buildErrorWidget();
+          },
+        );
+      } catch (e) {
+        debugPrint('Error decoding base64 image: $e');
+        return _buildErrorWidget();
+      }
     }
-    else {
-      return Image.file(
-        File(imagePath),
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildErrorWidget();
-        },
-      );
+
+    if (index < _photoUrls.length) {
+      final String imagePath = _photoUrls[index];
+
+      if (imagePath.startsWith('static/')) {
+        return Image.network(
+          "https://1df5910e3085.ngrok-free.app$imagePath",
+          headers: {"ngrok-skip-browser-warning": "true"},
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildErrorWidget();
+          },
+        );
+      } else {
+        return Image.file(
+          File(imagePath),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildErrorWidget();
+          },
+        );
+      }
     }
+
+    return _buildErrorWidget();
   }
-
- 
-
 
   Widget _buildErrorWidget() {
     return Container(
@@ -185,7 +228,7 @@ class _PhotoGridState extends State<PhotoGrid> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Error',
+            'No Image',
             style: TextStyle(
               color: Themes.customWhite.withOpacity(0.5),
               fontSize: 10,
@@ -197,12 +240,14 @@ class _PhotoGridState extends State<PhotoGrid> {
   }
 
   void _navigateToGalleryView(BuildContext context, int index) {
+    List<String> photoUrlsForGallery = _createPhotoUrlsFromMedia();
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder:
             (context) => PhotoGalleryView(
-              photoUrls: widget.photoUrls,
+              photoUrls: photoUrlsForGallery,
               initialIndex: index,
               folderName: widget.folderName,
               onPhotoCropped: _handlePhotoCropped,
@@ -211,5 +256,23 @@ class _PhotoGridState extends State<PhotoGrid> {
             ),
       ),
     );
+  }
+
+  List<String> _createPhotoUrlsFromMedia() {
+    List<String> urls = [];
+
+    for (int i = 0; i < widget.mediaList.length; i++) {
+      final Media media = widget.mediaList[i];
+
+      if (media.hasImage) {
+        urls.add('base64_image_$i');
+      } else if (i < _photoUrls.length) {
+        urls.add(_photoUrls[i]);
+      } else {
+        urls.add('no_image_$i');
+      }
+    }
+
+    return urls;
   }
 }

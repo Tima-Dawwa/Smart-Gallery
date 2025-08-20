@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:smartgallery/core/helpers/image_cropper_handler.dart';
 import 'package:smartgallery/core/helpers/image_share_handler.dart';
 import 'package:smartgallery/core/utils/themes.dart';
@@ -89,8 +93,22 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
     }
 
     try {
-      if (_photoUrls.isEmpty || _currentIndex >= _photoUrls.length) {
-        debugPrint('Invalid photo index or empty photo list');
+      Media? currentMedia;
+      if (_currentIndex < widget.listmedia.length) {
+        currentMedia = widget.listmedia[_currentIndex];
+      }
+
+      String? imagePath;
+
+      if (currentMedia != null &&
+          currentMedia.hasImage &&
+          currentMedia.imageBase64 != null) {
+        imagePath = await _saveBase64ToTempFile(currentMedia.imageBase64!);
+      } else if (_photoUrls.isNotEmpty && _currentIndex < _photoUrls.length) {
+        imagePath = _photoUrls[_currentIndex];
+      }
+
+      if (imagePath == null) {
         _showErrorSnackBar('No valid image to crop');
         return;
       }
@@ -99,8 +117,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
         _isCropping = true;
       });
 
-      final String currentImagePath = _photoUrls[_currentIndex];
-      debugPrint('Attempting to crop image: $currentImagePath');
+      debugPrint('Attempting to crop image: $imagePath');
 
       ImageCropHandler.showCropDialog(context, () async {
         PhotoGalleryDialogs.showLoadingDialog(context);
@@ -108,7 +125,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
         try {
           final String? croppedPath = await ImageCropHandler.cropImage(
             context: context,
-            imagePath: currentImagePath,
+            imagePath: imagePath!,
             title: 'Crop ${widget.folderName} Photo',
           );
 
@@ -153,6 +170,27 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
     }
   }
 
+  Future<String?> _saveBase64ToTempFile(String base64String) async {
+    try {
+      String cleanBase64 = base64String;
+      if (base64String.contains(',')) {
+        cleanBase64 = base64String.split(',').last;
+      }
+
+      final bytes = base64Decode(cleanBase64);
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(
+        '${tempDir.path}/temp_crop_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      await tempFile.writeAsBytes(bytes);
+
+      return tempFile.path;
+    } catch (e) {
+      debugPrint('Error saving base64 to temp file: $e');
+      return null;
+    }
+  }
+
   void _showErrorSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(
@@ -169,16 +207,38 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
     }
   }
 
-  void _shareImage() {
-    final String currentImagePath = _photoUrls[_currentIndex];
-    ImageShareHandler.shareImageWithOptions(
-      context: context,
-      imagePath: currentImagePath,
-    );
+  void _shareImage() async {
+    try {
+      Media? currentMedia;
+      if (_currentIndex < widget.listmedia.length) {
+        currentMedia = widget.listmedia[_currentIndex];
+      }
+
+      String? imagePath;
+
+      if (currentMedia != null &&
+          currentMedia.hasImage &&
+          currentMedia.imageBase64 != null) {
+        imagePath = await _saveBase64ToTempFile(currentMedia.imageBase64!);
+      } else if (_currentIndex < _photoUrls.length) {
+        imagePath = _photoUrls[_currentIndex];
+      }
+
+      if (imagePath != null) {
+        ImageShareHandler.shareImageWithOptions(
+          context: context,
+          imagePath: imagePath,
+        );
+      } else {
+        _showErrorSnackBar('No image available to share');
+      }
+    } catch (e) {
+      debugPrint('Error sharing image: $e');
+      _showErrorSnackBar('Failed to share image');
+    }
   }
 
   void _showRecordingBottomSheet() {
-    // Get the current media item to get the imageId
     int imageId = 0;
     if (_currentIndex < widget.listmedia.length) {
       imageId = widget.listmedia[_currentIndex].idMedia;
@@ -192,7 +252,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
           (context) => RecordingBottomSheet(
             photoIndex: _currentIndex,
             folderName: widget.folderName,
-            imageId: imageId, // Pass the imageId
+            imageId: imageId,
           ),
     );
   }
@@ -206,6 +266,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
           PhotoPageView(
             pageController: _pageController,
             photoUrls: _photoUrls,
+            mediaList: widget.listmedia, 
             onPageChanged: _onPageChanged,
             onTap: _toggleControls,
           ),
