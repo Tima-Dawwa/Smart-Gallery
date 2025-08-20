@@ -115,6 +115,219 @@ class ImageShareHandler {
     }
   }
 
+  // New method to share only audio
+  static Future<void> shareAudio({
+    required BuildContext context,
+    required String audioPath,
+    String? text,
+    String? subject,
+  }) async {
+    try {
+      final File audioFile = File(audioPath);
+
+      if (!await audioFile.exists()) {
+        throw Exception('Audio file not found');
+      }
+
+      await Share.shareXFiles(
+        [XFile(audioPath)],
+        text: text ?? 'Check out this audio recording!',
+        subject: subject,
+      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Audio shared successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error sharing audio: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sharing audio: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  static Future<void> shareImageWithAudio({
+    required BuildContext context,
+    required String imagePath,
+    required String audioPath,
+    String? text,
+    String? subject,
+  }) async {
+    try {
+      final bool isAsset = imagePath.startsWith('assets/');
+      List<XFile> filesToShare = [];
+
+      // Handle image
+      if (isAsset) {
+        final ByteData data = await rootBundle.load(imagePath);
+        final Uint8List bytes = data.buffer.asUint8List();
+
+        final Directory tempDir = await getTemporaryDirectory();
+        final String fileName = imagePath.split('/').last;
+        final File tempFile = File('${tempDir.path}/$fileName');
+
+        await tempFile.writeAsBytes(bytes);
+        filesToShare.add(XFile(tempFile.path));
+      } else {
+        final File imageFile = File(imagePath);
+        if (await imageFile.exists()) {
+          filesToShare.add(XFile(imagePath));
+        } else {
+          throw Exception('Image file not found');
+        }
+      }
+
+      // Handle audio
+      final File audioFile = File(audioPath);
+      if (await audioFile.exists()) {
+        filesToShare.add(XFile(audioPath));
+      } else {
+        throw Exception('Audio file not found');
+      }
+
+      await Share.shareXFiles(
+        filesToShare,
+        text: text ?? 'Check out this image with audio recording!',
+        subject: subject,
+      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Image and audio shared successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error sharing image with audio: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sharing image with audio: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // New method to show share options with user choice
+  static void showShareOptionsBottomSheet({
+    required BuildContext context,
+    required String imagePath,
+    String? audioPath,
+  }) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[600],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Share Options',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // Share Image Only
+                ListTile(
+                  leading: const Icon(Icons.image, color: Colors.white),
+                  title: const Text(
+                    'Share Image Only',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  subtitle: const Text(
+                    'Share just the image',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    shareImage(context: context, imagePath: imagePath);
+                  },
+                ),
+
+                // Share Audio Only (only show if audio exists)
+                if (audioPath != null) ...[
+                  ListTile(
+                    leading: const Icon(Icons.audiotrack, color: Colors.white),
+                    title: const Text(
+                      'Share Audio Only',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    subtitle: const Text(
+                      'Share just the audio recording',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      shareAudio(context: context, audioPath: audioPath);
+                    },
+                  ),
+
+                  // Share Both
+                  ListTile(
+                    leading: const Icon(Icons.share, color: Colors.white),
+                    title: const Text(
+                      'Share Image & Audio',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    subtitle: const Text(
+                      'Share both image and audio together',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      shareImageWithAudio(
+                        context: context,
+                        imagePath: imagePath,
+                        audioPath: audioPath,
+                      );
+                    },
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   static void showShareDialog(BuildContext context, VoidCallback onShare) {
     showDialog(
       context: context,

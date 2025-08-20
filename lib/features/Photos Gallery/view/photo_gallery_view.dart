@@ -269,22 +269,36 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       Media? currentMedia;
       if (_currentIndex < widget.listmedia.length) {
         currentMedia = widget.listmedia[_currentIndex];
+        debugPrint('Current media found at index $_currentIndex');
+        debugPrint('Media hasAudio: ${currentMedia?.hasAudio}');
+        debugPrint('Media hasImage: ${currentMedia?.hasImage}');
+      } else {
+        debugPrint('No media found at index $_currentIndex');
       }
 
       String? imagePath;
 
+      // Get image path
       if (currentMedia != null &&
           currentMedia.hasImage &&
           currentMedia.imageBase64 != null) {
         imagePath = await _saveBase64ToTempFile(currentMedia.imageBase64!);
+        debugPrint('Image path from base64: $imagePath');
       } else if (_currentIndex < _photoUrls.length) {
         imagePath = _photoUrls[_currentIndex];
+        debugPrint('Image path from photoUrls: $imagePath');
       }
 
       if (imagePath != null) {
-        ImageShareHandler.shareImageWithOptions(
+        // Get audio path - check both saved recordings and base64 audio
+        String? audioPath = await _getAudioPath(currentMedia);
+        debugPrint('Final audioPath: $audioPath');
+
+        // Show share options with user choice
+        ImageShareHandler.showShareOptionsBottomSheet(
           context: context,
           imagePath: imagePath,
+          audioPath: audioPath,
         );
       } else {
         _showErrorSnackBar('No image available to share');
@@ -292,6 +306,90 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
     } catch (e) {
       debugPrint('Error sharing image: $e');
       _showErrorSnackBar('Failed to share image');
+    }
+  }
+
+  Future<String?> _getAudioPath(Media? media) async {
+    try {
+      if (media == null) {
+        debugPrint('Media is null');
+        return null;
+      }
+
+      debugPrint('Media hasAudio: ${media.hasAudio}');
+      debugPrint('Media audioBase64 length: ${media.audioBase64?.length ?? 0}');
+
+      // First, check for saved local recording
+      String? savedAudioPath = await _getSavedRecordingPath();
+      if (savedAudioPath != null) {
+        debugPrint('Found saved recording: $savedAudioPath');
+        return savedAudioPath;
+      }
+
+      // If no saved recording, check if media has base64 audio data
+      if (media.hasAudio && media.audioBase64 != null) {
+        debugPrint('Converting base64 audio to temp file');
+        String? audioPath = await _saveBase64AudioToTempFile(
+          media.audioBase64!,
+        );
+        debugPrint('Audio path created from base64: $audioPath');
+        return audioPath;
+      }
+
+      debugPrint('No audio found for media');
+      return null;
+    } catch (e) {
+      debugPrint('Error getting audio path: $e');
+      return null;
+    }
+  }
+
+  Future<String?> _getSavedRecordingPath() async {
+    try {
+      final Directory appDocumentsDir =
+          await getApplicationDocumentsDirectory();
+      String savedPath =
+          '${appDocumentsDir.path}/saved_recordings/photo_${_currentIndex}_recording.m4a';
+      File recordingFile = File(savedPath);
+
+      if (await recordingFile.exists()) {
+        final fileSize = await recordingFile.length();
+        if (fileSize > 0) {
+          debugPrint('Found saved recording file: $savedPath');
+          return savedPath;
+        } else {
+          debugPrint('Saved recording file exists but is empty');
+          await recordingFile.delete();
+        }
+      } else {
+        debugPrint('No saved recording file found at: $savedPath');
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('Error checking for saved recording: $e');
+      return null;
+    }
+  }
+
+  Future<String?> _saveBase64AudioToTempFile(String base64String) async {
+    try {
+      String cleanBase64 = base64String;
+      if (base64String.contains(',')) {
+        cleanBase64 = base64String.split(',').last;
+      }
+
+      final bytes = base64Decode(cleanBase64);
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(
+        '${tempDir.path}/temp_audio_${DateTime.now().millisecondsSinceEpoch}.m4a',
+      );
+      await tempFile.writeAsBytes(bytes);
+
+      return tempFile.path;
+    } catch (e) {
+      debugPrint('Error saving base64 audio to temp file: $e');
+      return null;
     }
   }
 
@@ -310,6 +408,20 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
             photoIndex: _currentIndex,
             folderName: widget.folderName,
             imageId: imageId,
+            onRecordingSaved: (String recordingPath) {
+              // Refresh the state when a new recording is saved
+              setState(() {
+                // This will trigger a rebuild and potentially update the share options
+              });
+              debugPrint('Recording saved callback: $recordingPath');
+            },
+            onRecordingDeleted: () {
+              // Refresh the state when recording is deleted
+              setState(() {
+                // This will trigger a rebuild and update the share options
+              });
+              debugPrint('Recording deleted callback');
+            },
           ),
     );
   }
