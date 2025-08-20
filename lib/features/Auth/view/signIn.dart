@@ -67,13 +67,7 @@ class _SignInPageState extends State<SignInPage> {
               ),
             );
 
-            // TODO: Navigate to home page with user data
-            // You can now pass the userId to the next screen
-            // Navigator.pushReplacementNamed(
-            //   context,
-            //   '/home',
-            //   arguments: {'userId': state.userId}
-            // );
+          
 
             print('User authenticated with ID: ${state.userId}');
           } else if (state is FailureAuthState) {

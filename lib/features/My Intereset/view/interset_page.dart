@@ -35,18 +35,15 @@ class _InterestsPageState extends State<InterestsPage> {
       _isLoading = true;
     });
 
-    // Use the combined method to load both data sets at once
     context.read<IntersetCubit>().loadAllData(widget.userId);
   }
 
   void _toggleInterest(String interest) {
-    // Prevent toggling while operations are in progress
     if (_isLoading) return;
 
     setState(() {
       if (_selectedInterests.contains(interest)) {
         _selectedInterests.remove(interest);
-        // Remove from user's interests if it was previously selected
         if (_userInterests.contains(interest)) {
           context.read<IntersetCubit>().deleteUserClassification(
             userId: widget.userId,
@@ -55,7 +52,6 @@ class _InterestsPageState extends State<InterestsPage> {
         }
       } else {
         _selectedInterests.add(interest);
-        // Add to user's interests
         context.read<IntersetCubit>().insertUserClassification(
           userId: widget.userId,
           classificationType: interest,
@@ -111,7 +107,6 @@ class _InterestsPageState extends State<InterestsPage> {
                 });
                 print('Loading state received');
               } else if (state is ClassificationOperationSuccessState) {
-                // Show success message but don't change loading state
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(state.message),
@@ -120,7 +115,6 @@ class _InterestsPageState extends State<InterestsPage> {
                   ),
                 );
               } else if (state is UserClassificationTypesLoadedState) {
-                // Handle individual user types update (from refresh operations)
                 setState(() {
                   _userInterests = state.userTypes;
                   _selectedInterests.clear();
@@ -131,7 +125,6 @@ class _InterestsPageState extends State<InterestsPage> {
                 setState(() {
                   _isLoading = false;
                 });
-                // Show error message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error: ${state.failure.errMessage}'),
@@ -292,7 +285,6 @@ class _InterestsPageState extends State<InterestsPage> {
     );
   }
 
-  // Helper method to get icons for interests
   IconData _getIconForInterest(String interest) {
     final iconMap = {
       'Photography': Icons.camera_alt,
@@ -315,7 +307,6 @@ class _InterestsPageState extends State<InterestsPage> {
       'Science': Icons.science,
       'History': Icons.history_edu,
       'Beauty': Icons.face_retouching_natural,
-      // Add mappings for your actual interests from API
       'clothes': Icons.checkroom,
       'food': Icons.restaurant,
       'text': Icons.text_fields,

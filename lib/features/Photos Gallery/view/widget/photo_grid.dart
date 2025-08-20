@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smartgallery/core/utils/constants.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -188,7 +189,7 @@ class _PhotoGridState extends State<PhotoGrid> {
 
       if (imagePath.startsWith('static/')) {
         return Image.network(
-          "https://1df5910e3085.ngrok-free.app$imagePath",
+          "$ngrok$imagePath",
           headers: {"ngrok-skip-browser-warning": "true"},
           fit: BoxFit.cover,
           width: double.infinity,

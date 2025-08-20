@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smartgallery/core/utils/constants.dart';
 import 'package:smartgallery/core/utils/themes.dart';
 import 'package:smartgallery/features/Gallery%20Folders/model/folders.dart';
 
@@ -24,7 +25,7 @@ class FolderCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         child: Image.network(
-          "https://1df5910e3085.ngrok-free.app${folder.coverImage}",
+          ngrok+folder.coverImage,
           headers: {"ngrok-skip-browser-warning": "true"},
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
@@ -51,7 +52,6 @@ class FolderCard extends StatelessWidget {
     );
   }
 
-  // Fallback image when loading fails
   Widget _buildFallbackImage() {
     return Container(
       height: 120,
@@ -95,10 +95,8 @@ class FolderCard extends StatelessWidget {
               flex: 3,
               child: Stack(
                 children: [
-                  // Cover Image
                   _buildCoverImage(),
 
-                  // Lock overlay
                   if (folder.isLocked)
                     Container(
                       decoration: BoxDecoration(
@@ -116,7 +114,6 @@ class FolderCard extends StatelessWidget {
                       ),
                     ),
 
-                  // Settings Button
                   Positioned(
                     top: 8,
                     left: 8,
@@ -141,7 +138,6 @@ class FolderCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Photo Count
                   Positioned(
                     top: 8,
                     right: 8,

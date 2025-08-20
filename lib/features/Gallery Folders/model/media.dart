@@ -8,8 +8,8 @@ class Media {
   factory Media.fromJson(Map<String, dynamic> json) {
     return Media(
       idMedia: json['idimage'] ?? 0,
-      audioBase64: json['audio_base64'], // Can be null or string
-      imageBase64: json['image_base64'], // Can be null or string
+      audioBase64: json['audio_base64'],
+      imageBase64: json['image_base64'], 
     );
   }
 
