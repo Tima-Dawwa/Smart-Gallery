@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:smartgallery/api/api_service.dart';
@@ -8,8 +10,6 @@ class PhotoGalleryService {
   final ApiService api;
 
   PhotoGalleryService(this.api);
-
-
 
   Future<Either<Failure, List<Media>>> getFolderMedia({
     required int folderId,
@@ -96,9 +96,6 @@ class PhotoGalleryService {
     }
   }
 
-
-
-
   Future<Either<Failure, String>> updateAudio({
     required int imageId,
     required String audioPath,
@@ -107,13 +104,33 @@ class PhotoGalleryService {
       print('Updating audio for image ID: $imageId');
       print('Audio path: $audioPath');
 
+      final File audioFile = File(audioPath);
+      if (!await audioFile.exists()) {
+        return left(
+          Failure(errMessage: 'Audio file not found at path: $audioPath'),
+        );
+      }
+
+      final fileSize = await audioFile.length();
+      if (fileSize == 0) {
+        return left(Failure(errMessage: 'Audio file is empty'));
+      }
+
       FormData formData = FormData();
 
       formData.fields.add(MapEntry('image_id', imageId.toString()));
 
+      String fileName =
+          'audio_${imageId}_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
       formData.files.add(
-        MapEntry('audio', await MultipartFile.fromFile(audioPath)),
+        MapEntry(
+          'audio',
+          await MultipartFile.fromFile(audioPath, filename: fileName),
+        ),
       );
+
+      print('Uploading file: $fileName (${fileSize} bytes)');
 
       Map<String, dynamic> response = await api.post(
         endPoint: '/api/media/updateAudio',
@@ -136,6 +153,20 @@ class PhotoGalleryService {
       if (e is DioException) {
         print('DioException details: ${e.response?.data}');
         print('DioException status code: ${e.response?.statusCode}');
+
+        if (e.response?.statusCode == 500) {
+          return left(
+            Failure(
+              errMessage:
+                  'Server error: Please check if the audio upload directory exists',
+            ),
+          );
+        } else if (e.response?.statusCode == 413) {
+          return left(Failure(errMessage: 'File too large'));
+        } else if (e.response?.statusCode == 415) {
+          return left(Failure(errMessage: 'Unsupported file format'));
+        }
+
         return left(Failure.fromDioException(e));
       } else {
         return left(
@@ -154,11 +185,16 @@ class PhotoGalleryService {
       print('Image path: $imagePath');
 
       FormData formData = FormData();
-
       formData.fields.add(MapEntry('image_id', imageId.toString()));
 
+      // Use proper filename for the multipart field
+      String fileName =
+          'image_${imageId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       formData.files.add(
-        MapEntry('image', await MultipartFile.fromFile(imagePath)),
+        MapEntry(
+          'image',
+          await MultipartFile.fromFile(imagePath, filename: fileName),
+        ),
       );
 
       Map<String, dynamic> response = await api.post(
@@ -178,9 +214,7 @@ class PhotoGalleryService {
         );
       }
     } catch (e) {
-  
       if (e is DioException) {
-    
         return left(Failure.fromDioException(e));
       } else {
         return left(

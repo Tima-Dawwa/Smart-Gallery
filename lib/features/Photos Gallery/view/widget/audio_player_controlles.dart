@@ -42,9 +42,7 @@ class AudioPlayerControls extends StatelessWidget {
           child: Column(
             children: [
               _buildRecordingInfo(),
-              const SizedBox(height: 12),
-              _buildDebugInfo(),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               _buildProgressSlider(context),
               const SizedBox(height: 16),
               _buildControlButtons(context),
@@ -57,42 +55,12 @@ class AudioPlayerControls extends StatelessWidget {
 
   Widget _buildRecordingInfo() {
     return Text(
-      recordingPath.startsWith('assets/')
-          ? 'Test Recording'
-          : 'Saved Recording',
+      'Saved Recording',
       style: TextStyle(
         color: Themes.customWhite,
         fontSize: 16,
         fontWeight: FontWeight.w600,
       ),
-    );
-  }
-
-  Widget _buildDebugInfo() {
-    return Column(
-      children: [
-        Text(
-          'File: ${recordingPath.split('/').last}',
-          style: TextStyle(
-            color: Themes.customWhite.withOpacity(0.7),
-            fontSize: 12,
-          ),
-        ),
-        Text(
-          'Duration: ${_formatDuration(playbackDuration)}',
-          style: TextStyle(
-            color: Themes.customWhite.withOpacity(0.7),
-            fontSize: 12,
-          ),
-        ),
-        Text(
-          'Position: ${_formatDuration(playbackPosition)}',
-          style: TextStyle(
-            color: Themes.customWhite.withOpacity(0.7),
-            fontSize: 12,
-          ),
-        ),
-      ],
     );
   }
 
@@ -192,13 +160,7 @@ class AudioPlayerControls extends StatelessWidget {
       } else {
         await audioPlayer.stop();
         await Future.delayed(const Duration(milliseconds: 200));
-
-        if (recordingPath.startsWith('assets/')) {
-          await audioPlayer.setSource(AssetSource('test.mp3'));
-        } else {
-          await audioPlayer.setSource(DeviceFileSource(recordingPath));
-        }
-
+        await audioPlayer.setSource(DeviceFileSource(recordingPath));
         await audioPlayer.resume();
       }
     } catch (e) {

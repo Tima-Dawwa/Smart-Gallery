@@ -7,7 +7,6 @@ import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_fallery
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_galley_widget.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/recording_bottom_sheet.dart';
 
-
 class PhotoGalleryView extends StatefulWidget {
   final List<String> photoUrls;
   final int initialIndex;
@@ -179,6 +178,12 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
   }
 
   void _showRecordingBottomSheet() {
+    // Get the current media item to get the imageId
+    int imageId = 0;
+    if (_currentIndex < widget.listmedia.length) {
+      imageId = widget.listmedia[_currentIndex].idMedia;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -187,6 +192,7 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
           (context) => RecordingBottomSheet(
             photoIndex: _currentIndex,
             folderName: widget.folderName,
+            imageId: imageId, // Pass the imageId
           ),
     );
   }
