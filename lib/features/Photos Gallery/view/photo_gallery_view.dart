@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:smartgallery/core/helpers/image_cropper_handler.dart';
 import 'package:smartgallery/core/helpers/image_share_handler.dart';
@@ -10,6 +11,8 @@ import 'package:smartgallery/features/Gallery%20Folders/model/media.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_fallery_controll.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/photo_galley_widget.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/recording_bottom_sheet.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallarey_cubit.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallarey_state.dart';
 
 class PhotoGalleryView extends StatefulWidget {
   final List<String> photoUrls;
@@ -144,6 +147,9 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
               widget.onPhotoCropped!(croppedPath, _currentIndex);
             }
 
+            // Upload cropped image to backend
+            await _uploadCroppedImageToBackend(croppedPath);
+
             _showSuccessSnackBar('Image cropped successfully!');
           } else {
             debugPrint('Crop was cancelled or failed');
@@ -167,6 +173,58 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
         _isCropping = false;
       });
       _showErrorSnackBar('Unexpected error occurred');
+    }
+  }
+
+  Future<void> _uploadCroppedImageToBackend(String croppedImagePath) async {
+    try {
+      Media? currentMedia;
+      if (_currentIndex < widget.listmedia.length) {
+        currentMedia = widget.listmedia[_currentIndex];
+      }
+
+      if (currentMedia != null) {
+        final int imageId = currentMedia.idMedia;
+
+        debugPrint(
+          'Uploading cropped image to backend - Image ID: $imageId, Path: $croppedImagePath',
+        );
+
+        // Show loading indicator for upload
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Themes.customWhite,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text('Uploading cropped image...'),
+                ],
+              ),
+              backgroundColor: Themes.primary,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+
+        final cubit = context.read<PhotoGalleryCubit>();
+        cubit.updateImage(imageId: imageId, imagePath: croppedImagePath);
+      } else {
+        debugPrint('No media found at current index for upload');
+        _showErrorSnackBar('Cannot upload: No media information found');
+      }
+    } catch (e) {
+      debugPrint('Error uploading cropped image: $e');
+      _showErrorSnackBar('Failed to upload cropped image: ${e.toString()}');
     }
   }
 
@@ -261,36 +319,54 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Themes.customBlack,
-      body: Stack(
-        children: [
-          PhotoPageView(
-            pageController: _pageController,
-            photoUrls: _photoUrls,
-            mediaList: widget.listmedia, 
-            onPageChanged: _onPageChanged,
-            onTap: _toggleControls,
-          ),
-          if (_showControls && !_isCropping)
-            PhotoGalleryTopControls(
-              currentIndex: _currentIndex,
-              totalPhotos: _photoUrls.length,
-              folderName: widget.folderName,
-              showShareButton: widget.showShareButton,
-              showCropButton: widget.showCropButton,
-              isCropping: _isCropping,
-              onBackPressed: _navigateBack,
-              onSharePressed: _shareImage,
-              onCropPressed: _cropImage,
+      body: BlocListener<PhotoGalleryCubit, PhotoGalleryStates>(
+        listener: (context, state) {
+          if (state is SuccessPhotoGalleryState) {
+            // Hide any loading snackbars
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            _showSuccessSnackBar(
+              'Image updated successfully: ${state.message}',
+            );
+          } else if (state is FailurePhotoGalleryState) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            _showErrorSnackBar(
+              'Failed to update image: ${state.failure.errMessage}',
+            );
+          }
+        },
+        child: Stack(
+          children: [
+            PhotoPageView(
+              pageController: _pageController,
+              photoUrls: _photoUrls,
+              mediaList: widget.listmedia,
+              onPageChanged: _onPageChanged,
+              onTap: _toggleControls,
             ),
-          if (_showControls && !_isCropping)
-            PhotoGalleryBottomControls(
-              showDeleteButton: widget.showDeleteButton,
-              showRecordingButton: widget.showRecordingButton,
-              onDeletePressed: _deletePhoto,
-              onRecordingPressed: _showRecordingBottomSheet,
-            ),
-          if (_isCropping) const CroppingOverlay(),
-        ],
+            if (_showControls && !_isCropping)
+              PhotoGalleryTopControls(
+                currentIndex: _currentIndex,
+                totalPhotos: _photoUrls.length,
+                folderName: widget.folderName,
+                showShareButton: widget.showShareButton,
+                showCropButton: widget.showCropButton,
+                isCropping: _isCropping,
+                onBackPressed: _navigateBack,
+                onSharePressed: _shareImage,
+                onCropPressed: _cropImage,
+              ),
+            if (_showControls && !_isCropping)
+              PhotoGalleryBottomControls(
+                showDeleteButton: widget.showDeleteButton,
+                showRecordingButton: widget.showRecordingButton,
+                onDeletePressed: _deletePhoto,
+                onRecordingPressed: _showRecordingBottomSheet,
+              ),
+            if (_isCropping) const CroppingOverlay(),
+          ],
+        ),
       ),
     );
   }
