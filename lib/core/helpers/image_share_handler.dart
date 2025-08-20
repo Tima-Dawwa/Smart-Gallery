@@ -115,7 +115,6 @@ class ImageShareHandler {
     }
   }
 
-  // New method to share only audio
   static Future<void> shareAudio({
     required BuildContext context,
     required String audioPath,
@@ -123,14 +122,23 @@ class ImageShareHandler {
     String? subject,
   }) async {
     try {
+      debugPrint('Attempting to share audio from: $audioPath');
+
       final File audioFile = File(audioPath);
 
       if (!await audioFile.exists()) {
-        throw Exception('Audio file not found');
+        throw Exception('Audio file not found at path: $audioPath');
       }
 
+      final int fileSize = await audioFile.length();
+      if (fileSize == 0) {
+        throw Exception('Audio file is empty');
+      }
+
+      debugPrint('Audio file validated: $audioPath (Size: $fileSize bytes)');
+
       await Share.shareXFiles(
-        [XFile(audioPath)],
+        [XFile(audioPath, mimeType: 'audio/m4a')],
         text: text ?? 'Check out this audio recording!',
         subject: subject,
       );
@@ -164,35 +172,25 @@ class ImageShareHandler {
     String? subject,
   }) async {
     try {
-      final bool isAsset = imagePath.startsWith('assets/');
+      debugPrint('Attempting to share image and audio');
+      debugPrint('Image path: $imagePath');
+      debugPrint('Audio path: $audioPath');
+
       List<XFile> filesToShare = [];
 
-      // Handle image
-      if (isAsset) {
-        final ByteData data = await rootBundle.load(imagePath);
-        final Uint8List bytes = data.buffer.asUint8List();
+      await _prepareImageForSharing(imagePath, filesToShare);
 
-        final Directory tempDir = await getTemporaryDirectory();
-        final String fileName = imagePath.split('/').last;
-        final File tempFile = File('${tempDir.path}/$fileName');
+      await _prepareAudioForSharing(audioPath, filesToShare);
 
-        await tempFile.writeAsBytes(bytes);
-        filesToShare.add(XFile(tempFile.path));
-      } else {
-        final File imageFile = File(imagePath);
-        if (await imageFile.exists()) {
-          filesToShare.add(XFile(imagePath));
-        } else {
-          throw Exception('Image file not found');
-        }
+      if (filesToShare.isEmpty) {
+        throw Exception('No valid files to share');
       }
 
-      // Handle audio
-      final File audioFile = File(audioPath);
-      if (await audioFile.exists()) {
-        filesToShare.add(XFile(audioPath));
-      } else {
-        throw Exception('Audio file not found');
+      debugPrint('Sharing ${filesToShare.length} files');
+      for (int i = 0; i < filesToShare.length; i++) {
+        debugPrint(
+          'File $i: ${filesToShare[i].path} (${filesToShare[i].mimeType})',
+        );
       }
 
       await Share.shareXFiles(
@@ -214,7 +212,7 @@ class ImageShareHandler {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error sharing image with audio: $e'),
+            content: Text('Error sharing: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -222,12 +220,111 @@ class ImageShareHandler {
     }
   }
 
-  // New method to show share options with user choice
+  static Future<void> _prepareImageForSharing(
+    String imagePath,
+    List<XFile> filesToShare,
+  ) async {
+    final bool isAsset = imagePath.startsWith('assets/');
+
+    if (isAsset) {
+      final ByteData data = await rootBundle.load(imagePath);
+      final Uint8List bytes = data.buffer.asUint8List();
+
+      final Directory tempDir = await getTemporaryDirectory();
+      final String fileName = imagePath.split('/').last;
+      final File tempFile = File('${tempDir.path}/share_$fileName');
+
+      await tempFile.writeAsBytes(bytes);
+      filesToShare.add(XFile(tempFile.path, mimeType: 'image/jpeg'));
+      debugPrint('Prepared asset image: ${tempFile.path}');
+    } else {
+      final File imageFile = File(imagePath);
+      if (await imageFile.exists()) {
+        final int imageSize = await imageFile.length();
+        if (imageSize > 0) {
+          filesToShare.add(XFile(imagePath, mimeType: 'image/jpeg'));
+          debugPrint(
+            'Prepared file image: $imagePath (Size: $imageSize bytes)',
+          );
+        } else {
+          throw Exception('Image file is empty');
+        }
+      } else {
+        throw Exception('Image file not found: $imagePath');
+      }
+    }
+  }
+
+  static Future<void> _prepareAudioForSharing(
+    String audioPath,
+    List<XFile> filesToShare,
+  ) async {
+    final File audioFile = File(audioPath);
+
+    if (!await audioFile.exists()) {
+      throw Exception('Audio file not found: $audioPath');
+    }
+
+    final int audioFileSize = await audioFile.length();
+    if (audioFileSize == 0) {
+      throw Exception('Audio file is empty');
+    }
+
+    final Directory tempDir = await getTemporaryDirectory();
+    final String audioFileName =
+        'recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final File tempAudioFile = File('${tempDir.path}/$audioFileName');
+
+    await audioFile.copy(tempAudioFile.path);
+
+    filesToShare.add(XFile(tempAudioFile.path, mimeType: 'audio/m4a'));
+    debugPrint(
+      'Prepared audio file: ${tempAudioFile.path} (Size: $audioFileSize bytes)',
+    );
+  }
+
+  static Future<bool> _validateAudioFile(String? audioPath) async {
+    if (audioPath == null || audioPath.isEmpty) {
+      debugPrint('Audio validation: No audio path provided');
+      return false;
+    }
+
+    try {
+      final File audioFile = File(audioPath);
+
+      if (!await audioFile.exists()) {
+        debugPrint('Audio validation: File does not exist at $audioPath');
+        return false;
+      }
+
+      final int fileSize = await audioFile.length();
+      final bool isValid =
+          fileSize > 1000; 
+
+      debugPrint(
+        'Audio validation: Path=$audioPath, Size=$fileSize bytes, Valid=$isValid',
+      );
+      return isValid;
+    } catch (e) {
+      debugPrint('Audio validation error: $e');
+      return false;
+    }
+  }
+
   static void showShareOptionsBottomSheet({
     required BuildContext context,
     required String imagePath,
     String? audioPath,
   }) async {
+    debugPrint('=== Share Options Debug ===');
+    debugPrint('Image path: $imagePath');
+    debugPrint('Audio path: $audioPath');
+
+    final bool hasValidAudio = await _validateAudioFile(audioPath);
+    debugPrint('Valid audio available: $hasValidAudio');
+
+    if (!context.mounted) return;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -250,6 +347,7 @@ class ImageShareHandler {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
+
                 const Padding(
                   padding: EdgeInsets.all(16),
                   child: Text(
@@ -262,7 +360,6 @@ class ImageShareHandler {
                   ),
                 ),
 
-                // Share Image Only
                 ListTile(
                   leading: const Icon(Icons.image, color: Colors.white),
                   title: const Text(
@@ -279,8 +376,7 @@ class ImageShareHandler {
                   },
                 ),
 
-                // Share Audio Only (only show if audio exists)
-                if (audioPath != null) ...[
+                if (hasValidAudio) ...[
                   ListTile(
                     leading: const Icon(Icons.audiotrack, color: Colors.white),
                     title: const Text(
@@ -293,11 +389,10 @@ class ImageShareHandler {
                     ),
                     onTap: () {
                       Navigator.pop(context);
-                      shareAudio(context: context, audioPath: audioPath);
+                      shareAudio(context: context, audioPath: audioPath!);
                     },
                   ),
 
-                  // Share Both
                   ListTile(
                     leading: const Icon(Icons.share, color: Colors.white),
                     title: const Text(
@@ -309,13 +404,27 @@ class ImageShareHandler {
                       style: TextStyle(color: Colors.white70),
                     ),
                     onTap: () {
+                      debugPrint('User selected: Share Image & Audio');
                       Navigator.pop(context);
                       shareImageWithAudio(
                         context: context,
                         imagePath: imagePath,
-                        audioPath: audioPath,
+                        audioPath: audioPath!,
                       );
                     },
+                  ),
+                ] else if (audioPath != null) ...[
+                  ListTile(
+                    leading: Icon(Icons.audiotrack, color: Colors.grey[600]),
+                    title: Text(
+                      'Audio Not Available',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    subtitle: Text(
+                      'No valid audio recording found',
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
+                    enabled: false,
                   ),
                 ],
 

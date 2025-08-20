@@ -147,7 +147,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
               widget.onPhotoCropped!(croppedPath, _currentIndex);
             }
 
-            // Upload cropped image to backend
             await _uploadCroppedImageToBackend(croppedPath);
 
             _showSuccessSnackBar('Image cropped successfully!');
@@ -278,7 +277,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
 
       String? imagePath;
 
-      // Get image path
       if (currentMedia != null &&
           currentMedia.hasImage &&
           currentMedia.imageBase64 != null) {
@@ -290,11 +288,9 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       }
 
       if (imagePath != null) {
-        // Get audio path - check both saved recordings and base64 audio
         String? audioPath = await _getAudioPath(currentMedia);
         debugPrint('Final audioPath: $audioPath');
 
-        // Show share options with user choice
         ImageShareHandler.showShareOptionsBottomSheet(
           context: context,
           imagePath: imagePath,
@@ -319,14 +315,12 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
       debugPrint('Media hasAudio: ${media.hasAudio}');
       debugPrint('Media audioBase64 length: ${media.audioBase64?.length ?? 0}');
 
-      // First, check for saved local recording
       String? savedAudioPath = await _getSavedRecordingPath();
       if (savedAudioPath != null) {
         debugPrint('Found saved recording: $savedAudioPath');
         return savedAudioPath;
       }
 
-      // If no saved recording, check if media has base64 audio data
       if (media.hasAudio && media.audioBase64 != null) {
         debugPrint('Converting base64 audio to temp file');
         String? audioPath = await _saveBase64AudioToTempFile(
@@ -409,16 +403,12 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
             folderName: widget.folderName,
             imageId: imageId,
             onRecordingSaved: (String recordingPath) {
-              // Refresh the state when a new recording is saved
               setState(() {
-                // This will trigger a rebuild and potentially update the share options
               });
               debugPrint('Recording saved callback: $recordingPath');
             },
             onRecordingDeleted: () {
-              // Refresh the state when recording is deleted
               setState(() {
-                // This will trigger a rebuild and update the share options
               });
               debugPrint('Recording deleted callback');
             },
