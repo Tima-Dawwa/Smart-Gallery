@@ -19,12 +19,12 @@ class FolderCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        color: Colors.grey[300], // Fallback background color
+        color: Colors.grey[300],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         child: Image.network(
-          "https://518f08bdc897.ngrok-free.app${folder.coverImage}",
+          "https://1df5910e3085.ngrok-free.app${folder.coverImage}",
           headers: {"ngrok-skip-browser-warning": "true"},
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {

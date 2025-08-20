@@ -12,7 +12,7 @@ class PhotoGrid extends StatefulWidget {
   final double mainAxisSpacing;
   final double borderRadius;
   final int folderid;
-  final List<Media>mediaList;
+  final List<Media> mediaList;
   final Function(List<String>)? onPhotoUrlsUpdated;
 
   const PhotoGrid({
@@ -141,9 +141,11 @@ class _PhotoGridState extends State<PhotoGrid> {
   }
 
   Widget _buildImageWidget(String imagePath) {
-    if (imagePath.startsWith('assets/')) {
-      return Image.asset(
-        imagePath,
+   
+   if (imagePath.startsWith('static/')) {
+      return Image.network(
+        "https://5fb3f5e0e40e.ngrok-free.app$imagePath",
+        headers: {"ngrok-skip-browser-warning": "true"},
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
@@ -151,7 +153,8 @@ class _PhotoGridState extends State<PhotoGrid> {
           return _buildErrorWidget();
         },
       );
-    } else {
+    }
+    else {
       return Image.file(
         File(imagePath),
         fit: BoxFit.cover,
@@ -163,6 +166,9 @@ class _PhotoGridState extends State<PhotoGrid> {
       );
     }
   }
+
+ 
+
 
   Widget _buildErrorWidget() {
     return Container(

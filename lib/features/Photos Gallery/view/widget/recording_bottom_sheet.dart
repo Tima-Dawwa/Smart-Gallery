@@ -4,15 +4,18 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:record/record.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartgallery/core/utils/themes.dart';
-import 'package:smartgallery/features/Photos%20Gallery/view/widget/audio_player_controlles.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view/widget/recording_preview_dialog.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallarey_cubit.dart';
+import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallarey_state.dart';
 import 'recording_bottom_sheet_content.dart';
 
 class RecordingBottomSheet extends StatefulWidget {
   final int photoIndex;
   final String folderName;
   final double heightRatio;
+  final int imageId;
   final Function(String)? onRecordingSaved;
   final Function()? onRecordingDeleted;
 
@@ -20,6 +23,7 @@ class RecordingBottomSheet extends StatefulWidget {
     super.key,
     required this.photoIndex,
     required this.folderName,
+    required this.imageId,
     this.heightRatio = 0.6,
     this.onRecordingSaved,
     this.onRecordingDeleted,
@@ -127,17 +131,6 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
         } else {
           await recordingFile.delete();
         }
-        return;
-      }
-
-      if (widget.photoIndex == 0) {
-        if (mounted) {
-          setState(() {
-            _recordingPath = 'assets/test.mp3';
-            _hasExistingRecording = true;
-          });
-          await _setAudioSource('assets/test.mp3', isAsset: true);
-        }
       } else {
         if (mounted) {
           setState(() {
@@ -157,16 +150,11 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
     }
   }
 
-  Future<void> _setAudioSource(String path, {bool isAsset = false}) async {
+  Future<void> _setAudioSource(String path) async {
     try {
       await _audioPlayer.stop();
       await Future.delayed(const Duration(milliseconds: 100));
-
-      if (isAsset) {
-        await _audioPlayer.setSource(AssetSource('test.mp3'));
-      } else {
-        await _audioPlayer.setSource(DeviceFileSource(path));
-      }
+      await _audioPlayer.setSource(DeviceFileSource(path));
     } catch (e) {
       debugPrint('Error setting audio source: $e');
       if (mounted) {
@@ -255,6 +243,7 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
           if (fileSize > 1000) {
             _showRecordingPreview(path);
           } else {
+            await recordingFile.delete();
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -320,6 +309,9 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
 
       await _setAudioSource(savedPath);
 
+      // Upload audio to backend
+      _uploadAudioToBackend(savedPath);
+
       if (widget.onRecordingSaved != null) {
         widget.onRecordingSaved!(savedPath);
       }
@@ -345,6 +337,14 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
     }
   }
 
+  void _uploadAudioToBackend(String audioPath) {
+    debugPrint(
+      'Uploading audio to backend - Image ID: ${widget.imageId}, Audio Path: $audioPath',
+    );
+    final cubit = context.read<PhotoGalleryCubit>();
+    cubit.updateAudio(imageId: widget.imageId, audioPath: audioPath);
+  }
+
   Future<void> _discardRecording(String tempPath) async {
     await _audioPlayer.stop();
     try {
@@ -355,7 +355,7 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
   }
 
   Future<void> _deleteRecording() async {
-    if (_recordingPath != null && !_recordingPath!.startsWith('assets/')) {
+    if (_recordingPath != null) {
       try {
         await _audioPlayer.stop();
 
@@ -391,20 +391,39 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return RecordingBottomSheetContent(
-      photoIndex: widget.photoIndex,
-      heightRatio: widget.heightRatio,
-      hasExistingRecording: _hasExistingRecording,
-      recordingPath: _recordingPath,
-      isRecording: _isRecording,
-      isPlaying: _isPlaying,
-      recordingDuration: _recordingDuration,
-      playbackPosition: _playbackPosition,
-      playbackDuration: _playbackDuration,
-      audioPlayer: _audioPlayer,
-      onStartRecording: _startRecording,
-      onStopRecording: _stopRecording,
-      onDeleteRecording: _deleteRecording,
+    return BlocListener<PhotoGalleryCubit, PhotoGalleryStates>(
+      listener: (context, state) {
+        if (state is SuccessPhotoGalleryState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Audio uploaded: ${state.message}'),
+              backgroundColor: Themes.success,
+            ),
+          );
+        } else if (state is FailurePhotoGalleryState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed: ${state.failure.errMessage}'),
+              backgroundColor: Themes.error,
+            ),
+          );
+        }
+      },
+      child: RecordingBottomSheetContent(
+        photoIndex: widget.photoIndex,
+        heightRatio: widget.heightRatio,
+        hasExistingRecording: _hasExistingRecording,
+        recordingPath: _recordingPath,
+        isRecording: _isRecording,
+        isPlaying: _isPlaying,
+        recordingDuration: _recordingDuration,
+        playbackPosition: _playbackPosition,
+        playbackDuration: _playbackDuration,
+        audioPlayer: _audioPlayer,
+        onStartRecording: _startRecording,
+        onStopRecording: _stopRecording,
+        onDeleteRecording: _deleteRecording,
+      ),
     );
   }
 }

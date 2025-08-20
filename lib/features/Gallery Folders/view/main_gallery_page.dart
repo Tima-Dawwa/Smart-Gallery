@@ -132,7 +132,7 @@ class _MainGalleryPageState extends State<MainGalleryPage> {
     List<String> photoUrls =
         mediaList
             .where((media) => media.hasImage)
-            .map((media) => media.imageBase64!)
+            .map((media) => "https://518f08bdc897.ngrok-free.app${media.imageBase64!}")
             .toList();
 
     if (photoUrls.isEmpty) {

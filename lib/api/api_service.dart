@@ -6,7 +6,7 @@ import 'package:smartgallery/features/Auth/view%20model/auth_service.dart';
 
 class ApiService {
   // final String baseUrl = 'http://10.0.2.2:5000';
-  final String baseUrl = 'https://518f08bdc897.ngrok-free.app';
+  final String baseUrl = 'https://1df5910e3085.ngrok-free.app';
   final Dio _dio;
 
 
