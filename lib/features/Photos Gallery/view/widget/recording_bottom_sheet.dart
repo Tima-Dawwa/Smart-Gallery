@@ -309,7 +309,6 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
 
       await _setAudioSource(savedPath);
 
-      // Upload audio to backend
       _uploadAudioToBackend(savedPath);
 
       if (widget.onRecordingSaved != null) {

@@ -33,7 +33,6 @@ class InterestsHeader extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Title
             const Text(
               'What are you into?',
               style: TextStyle(

@@ -71,8 +71,6 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
       (message) {
         print('Folder deleted successfully: $message');
         emit(SuccessGalleryFolderState(message: message));
-        // Optionally refresh folder list after deletion
-        // getAllFolders(userId);
       },
     );
   }
@@ -93,7 +91,6 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
           'Folder media loaded for folder $folderId: ${mediaList.length} items',
         );
 
-        // Filter out media items that have no actual content
         List<Media> validMedia =
             mediaList.where((media) => media.hasMedia).cast<Media>().toList();
 
@@ -125,7 +122,6 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
     );
   }
 
-  // Updated getAllFolders method to work with List<Folder>
   Future<void> getAllFolders({required int userId}) async {
     emit(LoadingAllFoldersState());
 
@@ -155,7 +151,6 @@ class GalleryFolderCubit extends Cubit<GalleryFolderStates> {
     }
   }
 
-  // Add this method to your GalleryFolderCubit class
 
   Future<void> updateAudio({
     required int imageId,

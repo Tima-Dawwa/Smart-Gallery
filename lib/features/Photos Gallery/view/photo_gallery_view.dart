@@ -190,7 +190,6 @@ class _PhotoGalleryViewState extends State<PhotoGalleryView> {
           'Uploading cropped image to backend - Image ID: $imageId, Path: $croppedImagePath',
         );
 
-        // Show loading indicator for upload
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

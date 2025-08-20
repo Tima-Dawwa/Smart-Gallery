@@ -11,7 +11,7 @@ import 'package:smartgallery/features/Display%20Interset/view/widget/selected_in
 import 'package:smartgallery/features/Gallery%20Folders/view/main_gallery_page.dart';
 
 class SelectedInterestsPage extends StatelessWidget {
-  final int userId; // Add userId parameter
+  final int userId; 
   final Function(Set<String>)? onInterestsChanged;
   final VoidCallback? onSave;
 
@@ -53,7 +53,6 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
   List<String> _allInterests = [];
   bool _isInitialized = false;
 
-  // Fallback icons for interests
   final Map<String, IconData> _interestIcons = {
     'Photography': Icons.camera_alt,
     'Travel': Icons.flight,
@@ -84,16 +83,13 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
   }
 
   void _loadData() {
-    // Load all classification types first
     context.read<ClassificationCubit>().getClassificationTypes();
-    // Then load user's selected interests
     context.read<ClassificationCubit>().getUserClassificationTypes(
       widget.userId,
     );
   }
 
   void _removeInterest(String interest) {
-    // Call API to delete user classification
     context.read<ClassificationCubit>().deleteUserClassification(
       userId: widget.userId,
       classificationType: interest,
@@ -101,7 +97,6 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
   }
 
   void _addInterest(String interest) {
-    // Call API to insert user classification
     context.read<ClassificationCubit>().insertUserClassification(
       userId: widget.userId,
       classificationType: interest,
@@ -171,7 +166,6 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
                 setState(() {
                   _allInterests = state.types;
                 });
-                // If user interests haven't been loaded yet, trigger that
                 if (!_isInitialized) {
                   context
                       .read<ClassificationCubit>()
@@ -191,8 +185,7 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
                     duration: const Duration(seconds: 2),
                   ),
                 );
-                // Refresh user interests after successful operation
-                // The cubit already does this, but we need to update our local state
+         
               } else if (state is ClassificationFailureState) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

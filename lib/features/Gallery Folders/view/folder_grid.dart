@@ -151,7 +151,6 @@ class _FolderPhotosPageState extends State<FolderPhotosPage> {
 
   void _showPhoto(int index) {
     print('Show photo ${index + 1}: ${_photos[index]}');
-    // TODO: Navigate to photo viewer
   }
 
   @override
