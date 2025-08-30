@@ -110,12 +110,15 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
     });
   }
 
+  // In recording_bottom_sheet.dart, replace the _checkExistingRecording method:
+
   Future<void> _checkExistingRecording() async {
     try {
       final Directory appDocumentsDir =
           await getApplicationDocumentsDirectory();
+      // Use imageId instead of photoIndex to make each recording unique
       String savedPath =
-          '${appDocumentsDir.path}/saved_recordings/photo_${widget.photoIndex}_recording.m4a';
+          '${appDocumentsDir.path}/saved_recordings/image_${widget.imageId}_recording.m4a';
       File recordingFile = File(savedPath);
 
       if (await recordingFile.exists()) {
@@ -146,6 +149,59 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
           _hasExistingRecording = false;
           _recordingPath = null;
         });
+      }
+    }
+  }
+
+  // Also update the _saveRecording method:
+  Future<void> _saveRecording(String tempPath) async {
+    try {
+      final Directory appDocumentsDir =
+          await getApplicationDocumentsDirectory();
+      final String savedDirPath = '${appDocumentsDir.path}/saved_recordings';
+      // Use imageId instead of photoIndex
+      final String savedPath =
+          '$savedDirPath/image_${widget.imageId}_recording.m4a';
+
+      final Directory savedDir = Directory(savedDirPath);
+      if (!await savedDir.exists()) {
+        await savedDir.create(recursive: true);
+      }
+
+      final File sourceFile = File(tempPath);
+      await sourceFile.copy(savedPath);
+      await sourceFile.delete();
+
+      setState(() {
+        _recordingPath = savedPath;
+        _hasExistingRecording = true;
+      });
+
+      await _setAudioSource(savedPath);
+
+      _uploadAudioToBackend(savedPath);
+
+      if (widget.onRecordingSaved != null) {
+        widget.onRecordingSaved!(savedPath);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Recording saved successfully!'),
+            backgroundColor: Themes.success,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error saving recording: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving recording: $e'),
+            backgroundColor: Themes.error,
+          ),
+        );
       }
     }
   }
@@ -283,57 +339,6 @@ class _RecordingBottomSheetState extends State<RecordingBottomSheet> {
         );
       },
     );
-  }
-
-  Future<void> _saveRecording(String tempPath) async {
-    try {
-      final Directory appDocumentsDir =
-          await getApplicationDocumentsDirectory();
-      final String savedDirPath = '${appDocumentsDir.path}/saved_recordings';
-      final String savedPath =
-          '$savedDirPath/photo_${widget.photoIndex}_recording.m4a';
-
-      final Directory savedDir = Directory(savedDirPath);
-      if (!await savedDir.exists()) {
-        await savedDir.create(recursive: true);
-      }
-
-      final File sourceFile = File(tempPath);
-      await sourceFile.copy(savedPath);
-      await sourceFile.delete();
-
-      setState(() {
-        _recordingPath = savedPath;
-        _hasExistingRecording = true;
-      });
-
-      await _setAudioSource(savedPath);
-
-      _uploadAudioToBackend(savedPath);
-
-      if (widget.onRecordingSaved != null) {
-        widget.onRecordingSaved!(savedPath);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Recording saved successfully!'),
-            backgroundColor: Themes.success,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error saving recording: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving recording: $e'),
-            backgroundColor: Themes.error,
-          ),
-        );
-      }
-    }
   }
 
   void _uploadAudioToBackend(String audioPath) {

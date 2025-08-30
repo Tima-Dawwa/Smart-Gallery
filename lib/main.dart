@@ -12,6 +12,7 @@ import 'package:smartgallery/features/My%20Intereset/view%20model/my_interset_cu
 import 'package:smartgallery/features/My%20Intereset/view%20model/my_interset_services.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallarey_cubit.dart';
 import 'package:smartgallery/features/Photos%20Gallery/view%20model/photo_gallery_service.dart';
+import 'package:smartgallery/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,17 +41,51 @@ class MyApp extends StatelessWidget {
               (context) =>
                   GalleryFolderCubit(getIt.get<GalleryFolderService>()),
         ),
-          BlocProvider(
+        BlocProvider(
           create:
-              (context) =>
-                  PhotoGalleryCubit(getIt.get<PhotoGalleryService>()),
+              (context) => PhotoGalleryCubit(getIt.get<PhotoGalleryService>()),
         ),
       ],
       child: MaterialApp(
         title: 'Pixort',
         debugShowCheckedModeBanner: false,
-        home: SignInPage(),
+        home: const SplashScreenWrapper(),
       ),
+    );
+  }
+}
+
+class SplashScreenWrapper extends StatefulWidget {
+  const SplashScreenWrapper({super.key});
+
+  @override
+  State<SplashScreenWrapper> createState() => _SplashScreenWrapperState();
+}
+
+class _SplashScreenWrapperState extends State<SplashScreenWrapper> {
+  @override
+  Widget build(BuildContext context) {
+    return SplashScreen(
+      logoAssetPath: 'assets/logo.jpeg',
+      onAnimationComplete: () {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder:
+                (context, animation, secondaryAnimation) => SignInPage(),
+            transitionDuration: const Duration(milliseconds: 500),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        );
+      },
+      splashDuration: const Duration(seconds: 3),
     );
   }
 }

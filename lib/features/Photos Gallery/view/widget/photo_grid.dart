@@ -53,7 +53,6 @@ class _PhotoGridState extends State<PhotoGrid> {
       widget.onPhotoUrlsUpdated!(_photoUrls);
     }
 
-    debugPrint('Photo cropped and grid updated at index $index: $croppedPath');
   }
 
   void _handlePhotoDeleted(int index) {}

@@ -138,28 +138,28 @@ class FolderCard extends StatelessWidget {
                     ),
                   ),
 
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Themes.customBlack.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${folder.photoCount ?? 0}',
-                        style: TextStyle(
-                          color: Themes.customWhite,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Positioned(
+                  //   top: 8,
+                  //   right: 8,
+                  //   child: Container(
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 8,
+                  //       vertical: 4,
+                  //     ),
+                  //     decoration: BoxDecoration(
+                  //       color: Themes.customBlack.withOpacity(0.7),
+                  //       borderRadius: BorderRadius.circular(12),
+                  //     ),
+                  //     child: Text(
+                  //       '${folder.photoCount ?? 0}',
+                  //       style: TextStyle(
+                  //         color: Themes.customWhite,
+                  //         fontSize: 12,
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

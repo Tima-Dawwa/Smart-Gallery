@@ -1,12 +1,9 @@
-
-
 import 'package:dio/dio.dart';
 import 'package:smartgallery/core/helpers/service_locator.dart';
 import 'package:smartgallery/features/Auth/view%20model/auth_service.dart';
 
 class ApiService {
-  // final String baseUrl = 'http://10.0.2.2:5000';
-  final String baseUrl = 'https://054264a12413.ngrok-free.app';
+  final String baseUrl = 'https://1a677953decb.ngrok-free.app';
   final Dio _dio;
 
 
@@ -27,8 +24,6 @@ class ApiService {
         extra: extra,
       ),
     );
-    print(response.statusCode);
-    print(response);
     return response.data;
   }
 
@@ -48,8 +43,6 @@ class ApiService {
         },
       ),
     );
-    print(response.statusCode);
-    print(response);
     return response.data;
   }
 
@@ -67,8 +60,6 @@ class ApiService {
         },
       ),
     );
-    print(response.statusCode);
-    print(response);
     return response.data;
   }
 
@@ -88,8 +79,6 @@ class ApiService {
         },
       ),
     );
-    print(response.statusCode);
-    print(response);
     return response.data;
   }
 }
