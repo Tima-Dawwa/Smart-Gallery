@@ -35,12 +35,8 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.folder['name']);
-    _passwordController = TextEditingController(
-      text: widget.folder['password'] ?? '',
-    );
-    _confirmPasswordController = TextEditingController(
-      text: widget.folder['password'] ?? '',
-    );
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
     _isLocked = widget.folder['isLocked'] ?? false;
   }
 
@@ -151,8 +147,7 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         hasUpdates = true;
       }
 
-      if (_isLocked &&
-          _passwordController.text != (widget.folder['password'] ?? '')) {
+      if (_isLocked && _passwordController.text.isNotEmpty) {
         await context.read<GalleryFolderCubit>().updateFolderPassword(
           folderId: folderId,
           newPassword: _passwordController.text,
@@ -168,7 +163,11 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         final updatedFolder = Map<String, dynamic>.from(widget.folder);
         updatedFolder['name'] = _nameController.text.trim();
         updatedFolder['isLocked'] = _isLocked;
-        updatedFolder['password'] = _isLocked ? _passwordController.text : null;
+        if (_isLocked && _passwordController.text.isNotEmpty) {
+          updatedFolder['password'] = _passwordController.text;
+        } else if (!_isLocked) {
+          updatedFolder['password'] = null;
+        }
 
         widget.onFolderUpdated(updatedFolder);
       }
@@ -407,7 +406,10 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                       obscureText: !_showPassword,
                       enabled: !_isProcessing,
                       decoration: InputDecoration(
-                        hintText: 'Enter password',
+                        hintText:
+                            widget.folder['password'] != null
+                                ? 'Enter new password (leave empty to keep current)'
+                                : 'Enter password',
                         errorText: _passwordError,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
