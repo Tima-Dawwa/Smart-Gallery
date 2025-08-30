@@ -49,7 +49,6 @@ dependencies:
   image_cropper: ^9.1.0
   share_plus: ^11.0.0
   image_picker: ^1.1.2
-  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
@@ -102,17 +101,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-
-flutter_native_splash:
-  color: "#ffffff"  # Background color (white)
-  image: assets/logo.jpeg # Your splash image
-  android_gravity: center
-  ios_content_mode: scaleAspectFit 
-  # Optional: Dark mode support
-  color_dark: "#000000"
-  image_dark: assets/logo.jpeg
-  # Android 12+ support
-  android_12:
-    image: assets/logo.jpeg
-    color: "#ffffff"
-    
