@@ -22,29 +22,34 @@ class FolderSettingsDialog extends StatefulWidget {
 
 class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
   late TextEditingController _nameController;
-  late TextEditingController _passwordController;
-  late TextEditingController _confirmPasswordController;
+  late TextEditingController _currentPasswordController;
+  late TextEditingController _newPasswordController;
+  late TextEditingController _confirmNewPasswordController;
   late bool _isLocked;
-  bool _showPassword = false;
-  bool _showConfirmPassword = false;
+  bool _showCurrentPassword = false;
+  bool _showNewPassword = false;
+  bool _showConfirmNewPassword = false;
   String? _nameError;
-  String? _passwordError;
+  String? _currentPasswordError;
+  String? _newPasswordError;
   bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.folder['name']);
-    _passwordController = TextEditingController();
-    _confirmPasswordController = TextEditingController();
+    _currentPasswordController = TextEditingController();
+    _newPasswordController = TextEditingController();
+    _confirmNewPasswordController = TextEditingController();
     _isLocked = widget.folder['isLocked'] ?? false;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmNewPasswordController.dispose();
     super.dispose();
   }
 
@@ -79,7 +84,8 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
   void _validateAndSave() async {
     setState(() {
       _nameError = null;
-      _passwordError = null;
+      _currentPasswordError = null;
+      _newPasswordError = null;
     });
 
     if (_nameController.text.trim().isEmpty) {
@@ -89,24 +95,74 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
       return;
     }
 
-    if (_isLocked) {
-      if (_passwordController.text.isEmpty) {
+    final bool wasLocked = widget.folder['isLocked'] ?? false;
+    final bool hasPassword =
+        widget.folder['password'] != null &&
+        widget.folder['password'].toString().isNotEmpty;
+
+    if (_isLocked && !wasLocked) {
+      if (_newPasswordController.text.isEmpty) {
         setState(() {
-          _passwordError = 'Password cannot be empty for locked folders';
+          _newPasswordError = 'New password cannot be empty';
         });
         return;
       }
 
-      if (_passwordController.text != _confirmPasswordController.text) {
+      if (_newPasswordController.text != _confirmNewPasswordController.text) {
         setState(() {
-          _passwordError = 'Passwords do not match';
+          _newPasswordError = 'Passwords do not match';
         });
         return;
       }
 
-      if (_passwordController.text.length < 4) {
+      if (_newPasswordController.text.length < 4) {
         setState(() {
-          _passwordError = 'Password must be at least 4 characters';
+          _newPasswordError = 'Password must be at least 4 characters';
+        });
+        return;
+      }
+    }
+    else if (_isLocked && wasLocked && _newPasswordController.text.isNotEmpty) {
+      if (_currentPasswordController.text.isEmpty) {
+        setState(() {
+          _currentPasswordError =
+              'Current password is required to change password';
+        });
+        return;
+      }
+
+      if (_currentPasswordController.text != widget.folder['password']) {
+        setState(() {
+          _currentPasswordError = 'Current password is incorrect';
+        });
+        return;
+      }
+
+      if (_newPasswordController.text != _confirmNewPasswordController.text) {
+        setState(() {
+          _newPasswordError = 'New passwords do not match';
+        });
+        return;
+      }
+
+      if (_newPasswordController.text.length < 4) {
+        setState(() {
+          _newPasswordError = 'New password must be at least 4 characters';
+        });
+        return;
+      }
+    }
+    else if (!_isLocked && wasLocked && hasPassword) {
+      if (_currentPasswordController.text.isEmpty) {
+        setState(() {
+          _currentPasswordError = 'Current password is required to remove lock';
+        });
+        return;
+      }
+
+      if (_currentPasswordController.text != widget.folder['password']) {
+        setState(() {
+          _currentPasswordError = 'Current password is incorrect';
         });
         return;
       }
@@ -147,15 +203,15 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         hasUpdates = true;
       }
 
-      if (_isLocked && _passwordController.text.isNotEmpty) {
+      if (_isLocked && _newPasswordController.text.isNotEmpty) {
         await context.read<GalleryFolderCubit>().updateFolderPassword(
           folderId: folderId,
-          newPassword: _passwordController.text,
+          newPassword: _newPasswordController.text,
         );
         hasUpdates = true;
       }
 
-      if (!hasUpdates && _isLocked != (widget.folder['isLocked'] ?? false)) {
+      if (_isLocked != wasLocked) {
         hasUpdates = true;
       }
 
@@ -163,8 +219,9 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
         final updatedFolder = Map<String, dynamic>.from(widget.folder);
         updatedFolder['name'] = _nameController.text.trim();
         updatedFolder['isLocked'] = _isLocked;
-        if (_isLocked && _passwordController.text.isNotEmpty) {
-          updatedFolder['password'] = _passwordController.text;
+
+        if (_isLocked && _newPasswordController.text.isNotEmpty) {
+          updatedFolder['password'] = _newPasswordController.text;
         } else if (!_isLocked) {
           updatedFolder['password'] = null;
         }
@@ -250,6 +307,11 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final bool wasLocked = widget.folder['isLocked'] ?? false;
+    final bool hasPassword =
+        widget.folder['password'] != null &&
+        widget.folder['password'].toString().isNotEmpty;
+
     return BlocListener<GalleryFolderCubit, GalleryFolderStates>(
       listener: (context, state) {
         if (state is SuccessGalleryFolderState) {
@@ -378,9 +440,9 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                                     setState(() {
                                       _isLocked = value;
                                       if (!value) {
-                                        _passwordController.clear();
-                                        _confirmPasswordController.clear();
-                                        _passwordError = null;
+                                        _newPasswordController.clear();
+                                        _confirmNewPasswordController.clear();
+                                        _newPasswordError = null;
                                       }
                                     });
                                   },
@@ -390,105 +452,169 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
                     ),
                   ),
 
-                  if (_isLocked) ...[
+                  if (_isLocked || (wasLocked && !_isLocked)) ...[
                     const SizedBox(height: 16),
-                    Text(
-                      'Password',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Themes.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: !_showPassword,
-                      enabled: !_isProcessing,
-                      decoration: InputDecoration(
-                        hintText:
-                            widget.folder['password'] != null
-                                ? 'Enter new password (leave empty to keep current)'
-                                : 'Enter password',
-                        errorText: _passwordError,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Themes.accent),
+
+                    if (wasLocked && hasPassword) ...[
+                      Text(
+                        'Current Password',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Themes.primary,
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _currentPasswordController,
+                        obscureText: !_showCurrentPassword,
+                        enabled: !_isProcessing,
+                        decoration: InputDecoration(
+                          hintText: 'Enter current password',
+                          errorText: _currentPasswordError,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Themes.accent),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Themes.primary,
+                              width: 2,
+                            ),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
                             color: Themes.primary,
-                            width: 2,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _showCurrentPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Themes.dark,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _showCurrentPassword = !_showCurrentPassword;
+                              });
+                            },
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
                         ),
-                        prefixIcon: Icon(Icons.lock, color: Themes.primary),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _showPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: Themes.dark,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    if (_isLocked) ...[
+                      Text(
+                        wasLocked
+                            ? 'New Password (leave empty to keep current)'
+                            : 'New Password',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Themes.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _newPasswordController,
+                        obscureText: !_showNewPassword,
+                        enabled: !_isProcessing,
+                        decoration: InputDecoration(
+                          hintText:
+                              wasLocked
+                                  ? 'Enter new password (optional)'
+                                  : 'Enter new password',
+                          errorText: _newPasswordError,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Themes.accent),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _showPassword = !_showPassword;
-                            });
-                          },
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Themes.primary,
+                              width: 2,
+                            ),
+                          ),
+                          prefixIcon: Icon(Icons.lock, color: Themes.primary),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _showNewPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Themes.dark,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _showNewPassword = !_showNewPassword;
+                              });
+                            },
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Confirm Password',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Themes.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _confirmPasswordController,
-                      obscureText: !_showConfirmPassword,
-                      enabled: !_isProcessing,
-                      decoration: InputDecoration(
-                        hintText: 'Confirm password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Themes.accent),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
+                      const SizedBox(height: 16),
+
+                      if (_newPasswordController.text.isNotEmpty ||
+                          !wasLocked) ...[
+                        Text(
+                          'Confirm New Password',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                             color: Themes.primary,
-                            width: 2,
                           ),
                         ),
-                        prefixIcon: Icon(Icons.lock, color: Themes.primary),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _showConfirmPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: Themes.dark,
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _confirmNewPasswordController,
+                          obscureText: !_showConfirmNewPassword,
+                          enabled: !_isProcessing,
+                          decoration: InputDecoration(
+                            hintText: 'Confirm new password',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Themes.accent),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Themes.primary,
+                                width: 2,
+                              ),
+                            ),
+                            prefixIcon: Icon(Icons.lock, color: Themes.primary),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _showConfirmNewPassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Themes.dark,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _showConfirmNewPassword =
+                                      !_showConfirmNewPassword;
+                                });
+                              },
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _showConfirmPassword = !_showConfirmPassword;
-                            });
-                          },
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
+                      ],
+                    ],
                   ],
 
                   const SizedBox(height: 24),
@@ -514,6 +640,7 @@ class _FolderSettingsDialogState extends State<FolderSettingsDialog> {
 
                   const SizedBox(height: 16),
 
+                  // Action Buttons
                   Row(
                     children: [
                       Expanded(
