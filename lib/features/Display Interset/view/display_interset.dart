@@ -53,28 +53,6 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
   List<String> _allInterests = [];
   bool _isInitialized = false;
 
-  final Map<String, IconData> _interestIcons = {
-    'Photography': Icons.camera_alt,
-    'Travel': Icons.flight,
-    'Food': Icons.restaurant,
-    'Music': Icons.music_note,
-    'Sports': Icons.sports_soccer,
-    'Art': Icons.palette,
-    'Technology': Icons.computer,
-    'Books': Icons.book,
-    'Movies': Icons.movie,
-    'Gaming': Icons.videogame_asset,
-    'Fashion': Icons.checkroom,
-    'Fitness': Icons.fitness_center,
-    'Nature': Icons.nature,
-    'Cooking': Icons.kitchen,
-    'Dancing': Icons.music_video,
-    'Pets': Icons.pets,
-    'Cars': Icons.directions_car,
-    'Science': Icons.science,
-    'History': Icons.history_edu,
-    'Beauty': Icons.face_retouching_natural,
-  };
 
   @override
   void initState() {
@@ -142,7 +120,7 @@ class _SelectedInterestsViewState extends State<SelectedInterestsView> {
   }
 
   IconData _getIconForInterest(String interestName) {
-    return _interestIcons[interestName] ?? Icons.star;
+    return  Icons.star;
   }
 
   void _handleSave() {
